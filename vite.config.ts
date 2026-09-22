@@ -5,6 +5,8 @@ import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
   return {
+    // GitHub Pages serves the app under /levelvest/ — keep asset URLs relative.
+    base: './',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
