@@ -1,0 +1,7 @@
+{
+  "name": "LevelVest",
+  "description": "The Duolingo for Investing & Stock Trading: 遊戲化台股與投資心法學習，打造趣味技能樹、均線實戰挑戰與投資決策日記。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
