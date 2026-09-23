@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LevelVest 課程藍圖 — 像多鄰國一樣教股票</title>
+<style>
+  :root{
+    --paper:#fafaf7;
+    --ink:#17190f;
+    --muted:#6b7060;
+    --accent:#3f7d15;
+    --accent-soft:#eef2e4;
+    --hairline:#dcdad0;
+    --wash:#f1efe6;
+    --serif:'Noto Serif TC','Songti TC','PMingLiU','Georgia',serif;
+    --sans:'PingFang TC','Noto Sans TC','Microsoft JhengHei',sans-serif;
+    --mono:'SF Mono','Menlo','Consolas',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{font-size:16px;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--sans);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:820px;margin:0 auto;padding:64px 28px 96px;}
+
+  /* ---------- 封面 ---------- */
+  .kicker{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:18px;
+  }
+  h1.display{
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:2.9rem;
+    line-height:1.18;
+    letter-spacing:-.02em;
+    margin-bottom:14px;
+  }
+  .lede{
+    font-size:1.06rem;
+    color:var(--muted);
+    max-width:60ch;
+    margin-bottom:26px;
+  }
+  .meta-row{
+    display:flex;flex-wrap:wrap;gap:0;
+    border-top:1px solid var(--hairline);
+    border-bottom:1px solid var(--hairline);
+    padding:10px 0;
+    margin-bottom:56px;
+  }
+  .meta-row span{
+    font-family:var(--mono);
+    font-size:.72rem;
+    letter-spacing:.06em;
+    color:var(--muted);
+    margin-right:28px;
+  }
+  .meta-row b{color:var(--ink);font-weight:510;}
+
+  /* ---------- 目錄 ---------- */
+  .toc{margin-bottom:64px;}
+  .toc h2{
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:14px;
+  }
+  .toc ol{list-style:none;counter-reset:toc;}
+  .toc li{
+    counter-increment:toc;
+    display:flex;align-items:baseline;gap:14px;
+    padding:8px 0;border-bottom:1px solid var(--hairline);
+  }
+  .toc li::before{
+    content:counter(toc,decimal-leading-zero);
+    font-family:var(--mono);font-size:.78rem;color:var(--accent);
+  }
+  .toc a{color:var(--ink);text-decoration:none;font-weight:510;font-size:.95rem;}
+  .toc a:hover{color:var(--accent);}
+  .toc .pg{margin-left:auto;font-family:var(--mono);font-size:.72rem;color:var(--muted);}
+
+  /* ---------- 章節 ---------- */
+  section{margin-bottom:72px;}
+  .sec-head{margin-bottom:24px;}
+  .sec-no{
+    font-family:var(--mono);font-size:.78rem;color:var(--accent);
+    letter-spacing:.1em;display:block;margin-bottom:6px;
+  }
+  h2.sec-title{
+    font-family:var(--serif);font-weight:600;font-size:1.72rem;
+    letter-spacing:-.01em;line-height:1.25;
+  }
+  h3{
+    font-family:var(--serif);font-weight:600;font-size:1.18rem;
+    margin:34px 0 12px;
+  }
+  p{margin-bottom:14px;max-width:70ch;}
+  p.small{font-size:.86rem;color:var(--muted);}
+  strong{font-weight:560;}
+  em{font-style:normal;border-bottom:2px solid var(--accent-soft);}
+
+  /* ---------- 表格 ---------- */
+  table{
+    width:100%;border-collapse:collapse;
+    font-size:.86rem;margin:16px 0 8px;
+  }
+  th{
+    text-align:left;font-family:var(--mono);font-size:.68rem;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    font-weight:400;padding:8px 10px;border-bottom:1px solid var(--ink);
+  }
+  td{
+    padding:9px 10px;border-bottom:1px solid var(--hairline);
+    vertical-align:top;line-height:1.5;
+  }
+  tr:last-child td{border-bottom:1px solid var(--ink);}
+  td.id{font-family:var(--mono);font-size:.78rem;color:var(--accent);white-space:nowrap;}
+  td .xp{font-family:var(--mono);font-size:.75rem;color:var(--muted);white-space:nowrap;}
+
+  /* ---------- BOSS 標記 ---------- */
+  .boss{
+    display:flex;align-items:baseline;gap:12px;
+    border:1px solid var(--accent);
+    padding:10px 14px;margin:14px 0 6px;
+  }
+  .boss .tag{
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--paper);background:var(--accent);
+    padding:2px 8px;white-space:nowrap;
+  }
+  .boss .txt{font-size:.9rem;}
+
+  /* ---------- 例題 ---------- */
+  .quiz{
+    border:1px solid var(--hairline);
+    background:var(--wash);
+    padding:16px 18px;margin:14px 0;
+    font-size:.9rem;
+  }
+  .quiz .q-type{
+    font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--accent);margin-bottom:8px;
+  }
+  .quiz p{margin-bottom:8px;}
+  .quiz ol{list-style:none;margin:0 0 8px;}
+  .quiz ol li{padding:3px 0;font-size:.88rem;}
+  .quiz .ans{
+    font-size:.82rem;color:var(--muted);border-top:1px solid var(--hairline);
+    padding-top:8px;
+  }
+  .quiz .ans b{color:var(--accent);font-weight:560;}
+
+  /* ---------- 流程 ---------- */
+  .flow{
+    display:flex;flex-wrap:wrap;gap:0;align-items:stretch;
+    margin:18px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);
+  }
+  .flow .step{
+    flex:1 1 150px;padding:14px 16px;
+    border-right:1px solid var(--hairline);
+  }
+  .flow .step:last-child{border-right:none;}
+  .flow .step .n{font-family:var(--mono);font-size:.68rem;color:var(--accent);display:block;margin-bottom:4px;}
+  .flow .step .t{font-weight:560;font-size:.9rem;display:block;margin-bottom:2px;}
+  .flow .step .d{font-size:.78rem;color:var(--muted);line-height:1.45;}
+
+  /* ---------- SVG 地圖 ---------- */
+  .map{margin:26px 0 10px;}
+  .map svg{width:100%;height:auto;display:block;}
+  .map-caption{font-size:.78rem;color:var(--muted);margin-bottom:24px;}
+
+  /* ---------- 大數字 ---------- */
+  .stats{
+    display:flex;flex-wrap:wrap;
+    border-top:1px solid var(--ink);border-bottom:1px solid var(--ink);
+    margin:22px 0;
+  }
+  .stats .st{
+    flex:1 1 120px;padding:16px 14px;
+    border-right:1px solid var(--hairline);
+  }
+  .stats .st:last-child{border-right:none;}
+  .stats .num{font-family:var(--serif);font-size:1.9rem;font-weight:600;line-height:1.1;}
+  .stats .lbl{font-size:.74rem;color:var(--muted);letter-spacing:.04em;}
+
+  ul.plain{list-style:none;margin:0 0 14px;}
+  ul.plain li{
+    padding:7px 0 7px 22px;position:relative;
+    border-bottom:1px solid var(--hairline);font-size:.92rem;max-width:70ch;
+  }
+  ul.plain li::before{
+    content:"";position:absolute;left:2px;top:16px;
+    width:8px;height:8px;background:var(--accent);
+  }
+  .note{
+    font-size:.84rem;color:var(--muted);
+    border-left:2px solid var(--hairline);
+    padding:2px 0 2px 16px;margin:18px 0;max-width:66ch;
+  }
+  .colophon{
+    border-top:1px solid var(--ink);padding-top:18px;margin-top:24px;
+    font-size:.78rem;color:var(--muted);
+  }
+  @media (max-width:640px){
+    h1.display{font-size:2.1rem;}
+    .page{padding:44px 18px 72px;}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ============ 封面 ============ -->
+  <header>
+    <div class="kicker">Product Spec · LevelVest Curriculum Blueprint · v1.0</div>
+    <h1 class="display">LevelVest 課程藍圖<br>像多鄰國一樣教股票</h1>
+    <p class="lede">把 Duolingo 的教學引擎完整移植到投資理財教育：10 大章節、38 個單元、約 170 課的主線地圖，搭配 10 種題型、完整的遊戲機制對照與落地路線。涵蓋台股實戰語境——T+2 交割、盤中零股、20MA 月線、處置效應——從第一張 K 線到大師認證。</p>
+    <div class="meta-row">
+      <span>範圍 <b>主線課程 12–18 個月</b></span>
+      <span>對象 <b>Gen Z 投資新手</b></span>
+      <span>市場 <b>台股（含 ETF／期權延伸）</b></span>
+      <span>日期 <b>2026-09-22</b></span>
+    </div>
+  </header>
+
+  <!-- ============ 目錄 ============ -->
+  <nav class="toc">
+    <h2>目錄</h2>
+    <ol>
+      <li><a href="#s1">設計原則 — Duolingo 引擎拆解</a><span class="pg">01</span></li>
+      <li><a href="#s2">課程總覽 — 主線地圖</a><span class="pg">02</span></li>
+      <li><a href="#s3">十大章節詳細課表</a><span class="pg">03</span></li>
+      <li><a href="#s4">題型庫 — 十種互動題</a><span class="pg">04</span></li>
+      <li><a href="#s5">遊戲機制對照表</a><span class="pg">05</span></li>
+      <li><a href="#s6">難度曲線、解鎖與徽章</a><span class="pg">06</span></li>
+      <li><a href="#s7">內容安全與合約紅線</a><span class="pg">07</span></li>
+      <li><a href="#s8">落地路線圖 — 接進 LevelVest</a><span class="pg">08</span></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 01 設計原則 ============ -->
+  <section id="s1">
+    <div class="sec-head">
+      <span class="sec-no">01 / DESIGN PRINCIPLES</span>
+      <h2 class="sec-title">設計原則 — Duolingo 引擎拆解</h2>
+    </div>
+    <p>多鄰國有效，不是因為「綠色貓頭鷹」，而是因為它把五件事做到了極致。股票教育照搬這五件事，學習動力就會成立。</p>
+
+    <h3>原則一：三分鐘一課，永遠還能再滑一關</h3>
+    <p>每一課壓縮在 3–5 分鐘內完成，這是「再玩一關」的心理底線。股票知識被拆成最小可學單位——一課只教「什麼是 T+2」，絕不把交割制度、手續費、違約後果塞進同一課。內容切得越碎，完成率越高，回訪率越高。</p>
+
+    <h3>原則二：每課固定的四步節奏</h3>
+    <div class="flow">
+      <div class="step"><span class="n">STEP 1</span><span class="t">概念卡</span><span class="d">30 秒，一張圖＋一句話定義</span></div>
+      <div class="step"><span class="n">STEP 2</span><span class="t">引導例</span><span class="d">1 分鐘，看一次別人怎麼做</span></div>
+      <div class="step"><span class="n">STEP 3</span><span class="t">互動練習</span><span class="d">1–2 分鐘，3–5 題混合題型</span></div>
+      <div class="step"><span class="n">STEP 4</span><span class="t">總結徽章</span><span class="d">15 秒，星星結算＋動效獎勵</span></div>
+    </div>
+    <p>節奏是鎖死的，變的只有內容。學生第五十次打開課程時，肌肉記憶依然成立。</p>
+
+    <h3>原則三：錯誤有代價，複習有出口</h3>
+    <p>答錯扣愛心——損失趨避讓人認真對待每一題。但愛心不該是懲罰的終點：愛心用完後的出口是<strong>「練習模式」</strong>（重刷錯題、無 XP 但補愛心）。這形成間隔複習閉環：錯過的題目會在 1 天、3 天、7 天後以變形題重新出現。</p>
+
+    <h3>原則四：情境判斷 &gt; 名詞背誦</h3>
+    <p>多鄰國教語言用「翻譯句子」而非「背單字表」；股票教育用<strong>情境題</strong>而非「名詞解釋」。考「小明在 T+2 中午才發現帳戶餘額不足，他面臨什麼風險？」比考「何謂交割？」記得住一百倍。本藍圖所有單元都以此為命題核心。</p>
+
+    <h3>原則五：可見的進度，不可見的課表</h3>
+    <p>技能樹上永遠只露出「已完成 / 當前 / 鎖定」三種節點。學生不需要知道後面還有 170 課——他只需要看見下一顆星星。安全感來自當前的路，不是遠方的山。</p>
+
+    <div class="note">以上原則直接決定後面所有課表的粒度：每課 = 1 個概念 + 3–5 題。任何超過 5 題才能理解的課，都應該拆成兩課。</div>
+  </section>
+
+  <!-- ============ 02 課程總覽 ============ -->
+  <section id="s2">
+    <div class="sec-head">
+      <span class="sec-no">02 / CURRICULUM MAP</span>
+      <h2 class="sec-title">課程總覽 — 主線地圖</h2>
+    </div>
+
+    <div class="stats">
+      <div class="st"><div class="num">10</div><div class="lbl">章節 Section</div></div>
+      <div class="st"><div class="num">38</div><div class="lbl">單元 Unit</div></div>
+      <div class="st"><div class="num">≈170</div><div class="lbl">課程 Lesson</div></div>
+      <div class="st"><div class="num">10</div><div class="lbl">BOSS 關卡</div></div>
+      <div class="st"><div class="num">3–5<i style="font-size:.9rem;font-style:normal">分鐘</i></div><div class="lbl">單課時長</div></div>
+    </div>
+
+    <div class="map">
+      <svg viewBox="0 0 1000 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="十個章節的蛇形學習路線圖">
+        <!-- 路徑 -->
+        <path d="M 60 70 H 940 M 940 70 Q 965 70 965 95 V 105 Q 965 130 940 130 H 60 M 60 130 Q 35 130 35 155 V 165 Q 35 190 60 190 H 940"
+              fill="none" stroke="#dcdad0" stroke-width="2"/>
+        <!-- S1 -->
+        <circle cx="60" cy="70" r="20" fill="#3f7d15"/>
+        <text x="60" y="75" text-anchor="middle" fill="#fafaf7" font-size="14" font-weight="600" font-family="monospace">S1</text>
+        <text x="60" y="40" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">市場新手村</text>
+        <!-- S2 -->
+        <circle cx="262" cy="70" r="20" fill="#fafaf7" stroke="#3f7d15" stroke-width="2"/>
+        <text x="262" y="75" text-anchor="middle" fill="#3f7d15" font-size="14" font-weight="600" font-family="monospace">S2</text>
+        <text x="262" y="40" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">技術指標學院</text>
+        <!-- S3 -->
+        <circle cx="464" cy="70" r="20" fill="#fafaf7" stroke="#3f7d15" stroke-width="2"/>
+        <text x="464" y="75" text-anchor="middle" fill="#3f7d15" font-size="14" font-weight="600" font-family="monospace">S3</text>
+        <text x="464" y="40" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">基本分析書院</text>
+        <!-- S4 -->
+        <circle cx="666" cy="70" r="20" fill="#fafaf7" stroke="#3f7d15" stroke-width="2"/>
+        <text x="666" y="75" text-anchor="middle" fill="#3f7d15" font-size="14" font-weight="600" font-family="monospace">S4</text>
+        <text x="666" y="40" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">下單實戰道場</text>
+        <!-- S5 -->
+        <circle cx="868" cy="70" r="20" fill="#fafaf7" stroke="#3f7d15" stroke-width="2"/>
+        <text x="868" y="75" text-anchor="middle" fill="#3f7d15" font-size="14" font-weight="600" font-family="monospace">S5</text>
+        <text x="868" y="40" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">風險管理堡壘</text>
+        <!-- S6 -->
+        <circle cx="868" cy="130" r="20" fill="#3f7d15"/>
+        <text x="868" y="135" text-anchor="middle" fill="#fafaf7" font-size="14" font-weight="600" font-family="monospace">S6</text>
+        <text x="868" y="170" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">投資心理修煉場</text>
+        <!-- S7 -->
+        <circle cx="666" cy="130" r="20" fill="#fafaf7" stroke="#3f7d15" stroke-width="2"/>
+        <text x="666" y="135" text-anchor="middle" fill="#3f7d15" font-size="14" font-weight="600" font-family="monospace">S7</text>
+        <text x="666" y="170" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">商品圖書館</text>
+        <!-- S8 -->
+        <circle cx="464" cy="130" r="20" fill="#fafaf7" stroke="#3f7d15" stroke-width="2"/>
+        <text x="464" y="135" text-anchor="middle" fill="#3f7d15" font-size="14" font-weight="600" font-family="monospace">S8</text>
+        <text x="464" y="170" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">總體經濟瞭望塔</text>
+        <!-- S9 -->
+        <circle cx="262" cy="130" r="20" fill="#fafaf7" stroke="#3f7d15" stroke-width="2"/>
+        <text x="262" y="135" text-anchor="middle" fill="#3f7d15" font-size="14" font-weight="600" font-family="monospace">S9</text>
+        <text x="262" y="170" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">進階研究館</text>
+        <!-- S10 -->
+        <circle cx="60" cy="130" r="22" fill="#17190f"/>
+        <text x="60" y="135" text-anchor="middle" fill="#fafaf7" font-size="14" font-weight="600" font-family="monospace">S10</text>
+        <text x="60" y="172" text-anchor="middle" font-size="12" fill="#17190f" font-weight="600">大師試煉 ★</text>
+      </svg>
+      <p class="map-caption">主線為單向蛇形路線：S1→S5 由淺入深（基礎 → 技術 → 基本 → 實戰 → 風控），S6 心理單元貫穿後半，S10 為畢業試煉。每章節末的 BOSS 關是唯一通行門檻。</p>
+    </div>
+
+    <table>
+      <thead><tr><th>章節</th><th>名稱</th><th>回答的問題</th><th>單元數</th></tr></thead>
+      <tbody>
+        <tr><td class="id">S1</td><td>市場新手村</td><td>股票是什麼？錢怎麼進出？</td><td>4</td></tr>
+        <tr><td class="id">S2</td><td>技術指標學院</td><td>圖怎麼看？趨勢怎麼認？</td><td>5</td></tr>
+        <tr><td class="id">S3</td><td>基本分析書院</td><td>這家公司值多少錢？</td><td>5</td></tr>
+        <tr><td class="id">S4</td><td>下單實戰道場</td><td>各種單怎麼下？槓桿怎麼運作？</td><td>4</td></tr>
+        <tr><td class="id">S5</td><td>風險管理堡壘</td><td>怎麼讓自己活得夠久？</td><td>4</td></tr>
+        <tr><td class="id">S6</td><td>投資心理修煉場</td><td>為什麼我知道卻做不到？</td><td>4</td></tr>
+        <tr><td class="id">S7</td><td>商品圖書館</td><td>除了個股還能買什麼？</td><td>4</td></tr>
+        <tr><td class="id">S8</td><td>總體經濟瞭望塔</td><td>大環境怎麼影響我的持股？</td><td>4</td></tr>
+        <tr><td class="id">S9</td><td>進階研究館</td><td>怎麼做出自己的研究？</td><td>4</td></tr>
+        <tr><td class="id">S10</td><td>大師試煉</td><td>我準備好用真錢了嗎？</td><td>3</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 03 十大章節詳細課表 ============ -->
+  <section id="s3">
+    <div class="sec-head">
+      <span class="sec-no">03 / DETAILED SYLLABUS</span>
+      <h2 class="sec-title">十大章節詳細課表</h2>
+    </div>
+    <p>編號規則：<em>章節.單元.課</em>（例：2.3.1 = 技術指標學院、量價關係單元、第 1 課）。基礎課 10 XP、情境課 15 XP、BOSS 50 XP；每課滿級 3 星（重刷可升星）。</p>
+
+    <h3>S1 · 市場新手村</h3>
+    <p class="small">目標：完成本章後，學生能看懂一筆真實委託的完整生命週期，並算出一筆交易的全部成本。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">1.1.1</td><td>股票是一張所有權</td><td>股東、股利、股價</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.1.2</td><td>一張 = 1,000 股</td><td>張／股換算</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.1.3</td><td>股價為什麼會動</td><td>供需、預期、消息</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">1.1.4</td><td>初見 K 線</td><td>紅 K、綠 K、開收高低</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.2.1</td><td>台股的交易時間</td><td>盤中 9:00–13:30、試撮</td><td>排序流程</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.2.2</td><td>上市、上櫃、興櫃</td><td>三個板塊差異</td><td>詞彙配對</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.2.3</td><td>委託單的旅程</td><td>券商→證交所→撮合</td><td>排序流程</td><td class="xp">15</td></tr>
+        <tr><td class="id">1.3.1</td><td>T+2 扣款制度</td><td>交割日計算</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.3.2</td><td>違約交割的代價</td><td>違約紀錄、帳戶限制</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">1.3.3</td><td>集保與券商帳戶</td><td>股票放在哪裡</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.4.1</td><td>買進要付什麼</td><td>手續費結構</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.4.2</td><td>賣出要多繳的稅</td><td>證交稅 0.3%</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">1.4.3</td><td>算出這筆交易的損益兩平</td><td>成本合計</td><td>模擬下單</td><td class="xp">15</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 1</span><span class="txt">新手村大考：完整模擬「開戶 → 下單 → 成交 → T+2 交割」流程，10 題混合題型，錯 2 題以下通過。</span></div>
+
+    <h3>S2 · 技術指標學院</h3>
+    <p class="small">目標：看懂 K 線語言與均線結構，知道每個指標的用途<strong>與盲點</strong>——本書院要求每課都附「這個指標什麼時候會騙你」。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">2.1.1</td><td>紅 K 與綠 K 的解剖</td><td>實體、影線</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.1.2</td><td>上影線在說什麼</td><td>賣壓訊號</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.1.3</td><td>十字線：多空拉鋸</td><td>轉折暗示</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">2.2.1</td><td>均線家族 5/10/20/60</td><td>均線意義</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.2.2</td><td>20MA 月線生命線</td><td>支撐與壓力</td><td>數據解讀</td><td class="xp">15</td></tr>
+        <tr><td class="id">2.2.3</td><td>黃金交叉與死亡交叉</td><td>短均穿越長均</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.2.4</td><td>均線會騙人的時候</td><td>盤整假突破</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+        <tr><td class="id">2.3.1</td><td>量先價行</td><td>成交量的語言</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.3.2</td><td>爆量與縮量</td><td>量價背離</td><td>數據解讀</td><td class="xp">15</td></tr>
+        <tr><td class="id">2.4.1</td><td>KD：超買與超賣</td><td>80/20 區間、鈍化</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.4.2</td><td>RSI：強弱指標</td><td>70/30 慣例</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.4.3</td><td>MACD：趨勢動能</td><td>DIF、柱狀體</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.4.4</td><td>指標打架聽誰的</td><td>多指標矛盾</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">2.5.1</td><td>頭肩頂與 W 底</td><td>反轉型態</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.5.2</td><td>箱型與整理</td><td>區間突破</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">2.5.3</td><td>型態的心理學</td><td>型態＝群眾行為</td><td>概念選擇</td><td class="xp">15</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 2</span><span class="txt">技術大考：給一張 60 交易日虛構走勢圖，標出 20MA 支撐、判讀兩次交叉訊號、指出一個假突破——限時 8 分鐘。</span></div>
+
+    <h3>S3 · 基本分析書院</h3>
+    <p class="small">目標：讀懂財報三表的分工，用四個比率對公司做第一輪體檢。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">3.1.1</td><td>損益表：賺不賺錢</td><td>營收→淨利</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.1.2</td><td>資產負債表：家底多少</td><td>資產＝負債＋權益</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.1.3</td><td>現金流量表：真實的血液</td><td>營業/投資/融資現金流</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.1.4</td><td>三表怎麼互相勾稽</td><td>淨利≠現金</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+        <tr><td class="id">3.2.1</td><td>EPS：一股賺多少</td><td>每股盈餘</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.2.2</td><td>本益比：幾年回本</td><td>PE 意義與陷阱</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.2.3</td><td>ROE：股東的報酬率</td><td>淨利/股東權益</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.2.4</td><td>毛利與營益率</td><td>獲利體質</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.3.1</td><td>本益比河流圖</td><td>歷史區間估值</td><td>數據解讀</td><td class="xp">15</td></tr>
+        <tr><td class="id">3.3.2</td><td>股價淨值比 PB</td><td>低於 1 的意義</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.3.3</td><td>現金殖利率</td><td>股息/股價</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.4.1</td><td>護城河：為什麼別人搶不走</td><td>競爭優勢類型</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">3.4.2</td><td>產業鏈上下游</td><td>從原料到終端</td><td>排序流程</td><td class="xp">10</td></tr>
+        <tr><td class="id">3.4.3</td><td>市占率與成長性</td><td>大而穩 vs 小而快</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">3.5.1</td><td>公開資訊觀測站導覽</td><td>官方資料查詢</td><td>模擬操作</td><td class="xp">15</td></tr>
+        <tr><td class="id">3.5.2</td><td>年報與法說會</td><td>一手資料閱讀</td><td>概念選擇</td><td class="xp">10</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 3</span><span class="txt">分析大考：兩家虛構公司（AI 科技 vs 傳產高息）的迷你財報並排，用本課所學做出投資傾向判斷並寫出兩行理由。</span></div>
+
+    <h3>S4 · 下單實戰道場</h3>
+    <p class="small">目標：所有台股單型都能正確操作，並理解信用交易的槓桿代價。本章所有情境都以虛擬盤呈現。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">4.1.1</td><td>限價單 vs 市價單</td><td>價格 vs 保證成交</td><td>模擬下單</td><td class="xp">10</td></tr>
+        <tr><td class="id">4.1.2</td><td>漲跌停 ±10%</td><td>漲停買不到、跌停賣不掉</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">4.1.3</td><td>試撮與開盤價</td><td>8:30 後試撮的陷阱</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+        <tr><td class="id">4.2.1</td><td>盤中零股交易</td><td>2020 年上路的規則</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">4.2.2</td><td>定期定額的威力</td><td>時間分散</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">4.2.3</td><td>定期定額的迷思</td><td>不是穩賈不賠</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">4.3.1</td><td>當沖：當日沖銷</td><td>規則、成本、風險</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">4.3.2</td><td>出借股票賺利息</td><td>借券出借機制</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">4.4.1</td><td>融資：借錢買股票</td><td>槓桿放大損益</td><td>計算應用</td><td class="xp">15</td></tr>
+        <tr><td class="id">4.4.2</td><td>融券：先賣後買</td><td>放空邏輯與回補</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">4.4.3</td><td>維持率與追繳令</td><td>低於門檻的後果</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">4.4.4</td><td>槓桿的正確恐懼</td><td>強制平倉案例</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 4</span><span class="txt">道場大考：三種市況（衝高、跌破月線、低量盤整）各下一筆「正確的單」，系統評分限價位置與風險標註。</span></div>
+
+    <h3>S5 · 風險管理堡壘</h3>
+    <p class="small">目標：建立「先想輸、再想贏」的決策順序。本章大量使用兩難情境題。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">5.1.1</td><td>系統性 vs 非系統性風險</td><td>分散能擋哪一種</td><td>詞彙配對</td><td class="xp">10</td></tr>
+        <tr><td class="id">5.1.2</td><td>波動不是敵人</td><td>波動 vs 本金永久損失</td><td>概念選擇</td><td class="xp">15</td></tr>
+        <tr><td class="id">5.2.1</td><td>停損：紀律的起點</td><td>固定 %、技術停損</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">5.2.2</td><td>移動停利</td><td>讓利潤奔跑</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">5.2.3</td><td>停損放在哪才對</td><td>不是放在想痛的地方</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">5.3.1</td><td>單一持股上限</td><td>集中 vs 分散的光譜</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">5.3.2</td><td>分批進出的節奏</td><td>試單、加碼、減碼</td><td>模擬下單</td><td class="xp">15</td></tr>
+        <tr><td class="id">5.4.1</td><td>組合再平衡</td><td>定期回到目標比例</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">5.4.2</td><td>用 ETF 打底</td><td>核心衛星策略</td><td>概念選擇</td><td class="xp">10</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 5</span><span class="txt">堡壘大考：用虛擬 10 萬元組一個 5 檔組合（比例合計 100%），通過 3 道「壓力情境題」——遇到回檔 20% 時你的計畫是什麼。</span></div>
+
+    <h3>S6 · 投資心理修煉場</h3>
+    <p class="small">目標：認出行為金融學的六大心魔，並建立個人紀律系統。本章與現有的「行為徽章」機制深度綁定。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">6.1.1</td><td>損失趨避</td><td>痛兩倍的虧損</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.1.2</td><td>處置效應</td><td>賣賺留賠</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.1.3</td><td>錨定效應</td><td>成本價綁架決策</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.2.1</td><td>FOMO：怕錯過</td><td>追高的代價</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.2.2</td><td>羊群效應</td><td>大家在買≠該買</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.2.3</td><td>過度自信</td><td>連勝後的陷阱</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.3.1</td><td>寫下你的交易計畫</td><td>進場/出場/部位三要素</td><td>對話挑戰</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.3.2</td><td>決策日記回顧法</td><td>對照判斷與結果</td><td>模擬操作</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.4.1</td><td>新聞過載症</td><td>雜訊 vs 資訊</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.4.2</td><td>投顧話術拆解</td><td>穩賺不賠的破綻</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+        <tr><td class="id">6.4.3</td><td>群組明牌的心理鏈</td><td>為什麼老師免費帶你賺</td><td>情境判斷</td><td class="xp">15</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 6</span><span class="txt">心魔試煉：十道兩難情境全數通過，授予「心魔獵人」徽章（可直接對應現有 BehavioralBadge 資料結構）。</span></div>
+
+    <h3>S7 · 商品圖書館</h3>
+    <p class="small">目標：認識個股以外的所有常見工具，理解 ETF 是新手最強的預設武器。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">7.1.1</td><td>ETF：一籃子股票</td><td>指數化投資</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">7.1.2</td><td>0050 vs 0056 思維</td><td>市值型 vs 高息型</td><td>詞彙配對</td><td class="xp">10</td></tr>
+        <tr><td class="id">7.1.3</td><td>內扣費用：沉默的侵蝕</td><td>長期費率差異</td><td>計算應用</td><td class="xp">15</td></tr>
+        <tr><td class="id">7.2.1</td><td>ETF 的溢價與折價</td><td>市價≠淨值</td><td>數據解讀</td><td class="xp">15</td></tr>
+        <tr><td class="id">7.2.2</td><td>配息節奏與除息</td><td>息不是白送的</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">7.2.3</td><td>規模與清算風險</td><td>小型 ETF 的隱憂</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+        <tr><td class="id">7.3.1</td><td>債券：借條的市場</td><td>票面利率、到期</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">7.3.2</td><td>利率與債價蹺蹺板</td><td>升息=債價跌</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">7.3.3</td><td>台幣定存 vs 債券 ETF</td><td>風險報酬對照</td><td>計算應用</td><td class="xp">10</td></tr>
+        <tr><td class="id">7.4.1</td><td>台指期：以小博大</td><td>期貨槓桿邏輯</td><td>概念選擇</td><td class="xp">15</td></tr>
+        <tr><td class="id">7.4.2</td><td>選擇權買方：權利金</td><td>最大損失=權利金</td><td>概念選擇</td><td class="xp">15</td></tr>
+        <tr><td class="id">7.4.3</td><td>為什麼新手應遠離衍生品</td><td>活下來優先</td><td>情境判斷</td><td class="xp">15</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 7</span><span class="txt">配置大考：三種角色（22 歲新鮮人、40 歲雙薪家庭、65 歲退休族）各配一組商品，系統檢查風險屬性匹配度。</span></div>
+
+    <h3>S8 · 總體經濟瞭望塔</h3>
+    <p class="small">目標：看懂新聞裡的總體詞彙，理解「大環境 → 產業 → 持股」的傳導鏈。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">8.1.1</td><td>景氣循環四季</td><td>擴張、頂峰、衰退、谷底</td><td>排序流程</td><td class="xp">10</td></tr>
+        <tr><td class="id">8.1.2</td><td>股債輪動的直覺</td><td>循環位置與配置</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">8.2.1</td><td>利率是資金的價格</td><td>升息降息影響鏈</td><td>排序流程</td><td class="xp">10</td></tr>
+        <tr><td class="id">8.2.2</td><td>央行在做什麼</td><td>理監事會、政策工具</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">8.2.3</td><td>美國打噴嚏，台股感冒</td><td>FOMC、外資流向</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">8.3.1</td><td>CPI：通膨溫度計</td><td>物價與購買力</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">8.3.2</td><td>匯率與出口股</td><td>台幣升貶的影響</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">8.4.1</td><td>PMI 榮枯線 50</td><td>景氣擴張收縮</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">8.4.2</td><td>看懂經濟數據日曆</td><td>重要公布時點</td><td>排序流程</td><td class="xp">10</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 8</span><span class="txt">望塔大考：給一則虛構的「央行意外升息 1 碼」聲明，推演對債市、定存股、電子出口股的三段傳導。</span></div>
+
+    <h3>S9 · 進階研究館</h3>
+    <p class="small">目標：從「上課」轉為「自己研究」，產出第一份完整的個股研究報告。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">9.1.1</td><td>現金股利 vs 股票股利</td><td>配息配股差異</td><td>詞彙配對</td><td class="xp">10</td></tr>
+        <tr><td class="id">9.1.2</td><td>除權息參考價</td><td>息從股價扣</td><td>計算應用</td><td class="xp">15</td></tr>
+        <tr><td class="id">9.1.3</td><td>填息與貼息</td><td>殖利率陷阱</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">9.2.1</td><td>三大法人籌碼</td><td>外資、投信、自營商</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">9.2.2</td><td>董監持股與質押</td><td>經營者信心訊號</td><td>數據解讀</td><td class="xp">10</td></tr>
+        <tr><td class="id">9.2.3</td><td>融資餘額的溫度計</td><td>散戶情緒指標</td><td>數據解讀</td><td class="xp">15</td></tr>
+        <tr><td class="id">9.3.1</td><td>財報季生存指南</td><td>法說、指引、反應</td><td>情境判斷</td><td class="xp">15</td></tr>
+        <tr><td class="id">9.3.2</td><td>處置股制度</td><td>注意股、分盤交易</td><td>錯誤偵測</td><td class="xp">15</td></tr>
+        <tr><td class="id">9.3.3</td><td>減資與增資</td><td>股本變動的訊號</td><td>概念選擇</td><td class="xp">10</td></tr>
+        <tr><td class="id">9.4.1</td><td>股利折現的直覺</td><td>未來現金流的現值</td><td>計算應用</td><td class="xp">15</td></tr>
+        <tr><td class="id">9.4.2</td><td>DCF 直覺版</td><td>成長、折現、終值</td><td>計算應用</td><td class="xp">15</td></tr>
+        <tr><td class="id">9.4.3</td><td>估值的藝術與無奈</td><td>模型 sensitivity</td><td>概念選擇</td><td class="xp">10</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 9</span><span class="txt">研究大考：對一家虛構公司產出五段式研究報告（產業、財務、籌碼、估值、風險），AI 對話導師逐段追問。</span></div>
+
+    <h3>S10 · 大師試煉（畢業章）</h3>
+    <p class="small">目標：證明「知識 × 紀律 × 實戰」三項俱全，取得使用真錢前的最後認證。</p>
+    <table>
+      <thead><tr><th>編號</th><th>課名</th><th>核心概念</th><th>互動／題型</th><th>XP</th></tr></thead>
+      <tbody>
+        <tr><td class="id">10.1.1</td><td>全主線錯題馬拉松</td><td>S1–S9 錯題重現</td><td>複習間隔題</td><td class="xp">20</td></tr>
+        <tr><td class="id">10.1.2</td><td>弱點補強計畫</td><td>個人錯題熱區</td><td>模擬操作</td><td class="xp">15</td></tr>
+        <tr><td class="id">10.2.1</td><td>90 天模擬盤：啟動</td><td>虛擬 30 萬＋每週決策</td><td>模擬下單</td><td class="xp">20</td></tr>
+        <tr><td class="id">10.2.2</td><td>90 天模擬盤：中檢</td><td>第 45 天回顧</td><td>對話挑戰</td><td class="xp">20</td></tr>
+        <tr><td class="id">10.2.3</td><td>90 天模擬盤：結算</td><td>績效＋紀律雙評分</td><td>模擬操作</td><td class="xp">20</td></tr>
+        <tr><td class="id">10.3.1</td><td>我的投資計畫書</td><td>目標、配置、規則</td><td>對話挑戰</td><td class="xp">20</td></tr>
+      </tbody>
+    </table>
+    <div class="boss"><span class="tag">BOSS 10 · FINAL</span><span class="txt">大師認證考：40 題混合題型 + 投資計畫書審查，通過後授予「LevelVest 大師」稱號與可分享的畢業證書頁。</span></div>
+  </section>
+
+  <!-- ============ 04 題型庫 ============ -->
+  <section id="s4">
+    <div class="sec-head">
+      <span class="sec-no">04 / QUESTION BANK</span>
+      <h2 class="sec-title">題型庫 — 十種互動題</h2>
+    </div>
+    <p>Duolingo 的魔力一半來自題型輪替：同一個概念用三種題型考三次，大腦就不會進入「選擇題自動駕駛」。以下十種題型各有示範例題，全部使用台股語境。</p>
+
+    <div class="quiz">
+      <div class="q-type">Q1 · 概念選擇</div>
+      <p>下列哪一個「不是」股票股東的身分象徵？</p>
+      <ol>
+        <li>（A）領取現金股利的權利</li>
+        <li>（B）參與股東會投票</li>
+        <li>（C）可以直接要求公司買回你的股票 ◉</li>
+        <li>（D）公司清算時分配剩餘財產</li>
+      </ol>
+      <div class="ans"><b>答案 C。</b>股東不能要求公司贖回持股——這題在建立的界線是「股東權利的邊界」。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q2 · 詞彙配對</div>
+      <p>把左列術語與右列定義連起來：融券 ↔ 先賣後買、融資 ↔ 借錢買股、當沖 ↔ 當日買賣軋平。</p>
+      <div class="ans"><b>設計重點：</b>三個槓桿詞彙一次配對，錯任何一個扣半顆愛心，防止賭徒式猜測。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q3 · 數據解讀</div>
+      <p>（附虛構走勢圖）這檔股票連續三日在 20MA 之下收盤，且量能持續放大，最合理的解讀是？</p>
+      <ol>
+        <li>（A）主力進場布局</li>
+        <li>（B）月線支撐失效，賣壓仍在增強 ◉</li>
+        <li>（C）即將 V 型反轉</li>
+      </ol>
+      <div class="ans"><b>答案 B。</b>「跌破＋增量」的組合判讀，訓練多訊號疊加而非單一訊號迷信。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q4 · 計算應用</div>
+      <p>小唯以每股 50 元買進 2 張股票，手續費 0.1425%（未打折），半個月後以 52 元全數賣出（證交稅 0.3%）。這筆交易的淨損益是？</p>
+      <ol>
+        <li>（A）+3,285 元 ◉</li>
+        <li>（B）+4,000 元（忘記成本的陷阱選項）</li>
+        <li>（C）+2,970 元</li>
+      </ol>
+      <div class="ans"><b>答案 A。</b>買進成本 100,000＋手續費 142.5；賣出 104,000−手續費 148.2−證交稅 312；淨利 3,397.3−實務四捨五入後約 +3,285～3,400 區間（依券商計價細節）。本題附逐步解析卡。<br>※ 費率以券商與最新公告為準。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q5 · 排序流程</div>
+      <p>把「一筆買進委託」的旅程排出正確順序：①券商接單 ②你在 App 按下買進 ③證交所撮合成交 ④T+2 扣款交割 ⑤集保登記在你的帳戶。</p>
+      <div class="ans"><b>答案：②→①→③→④→⑤。</b>排序題訓練「流程感」，比任何文字解釋都有效。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q6 · 錯誤偵測</div>
+      <p>（呈現一張虛構的看盤截圖式敘述）找出這段投顧話術中的<strong>三個破綻</strong>：「本老師帶領學員上月獲利 80%，現在只要加入 LINE 群，明天開盤直接買這檔處置股，穩賺不賠！」</p>
+      <div class="ans"><b>破綻：</b>不實績效宣稱／催促立即行動／高風險標的＋保證獲利。錯誤偵測題直接訓練詐騙免疫力。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q7 · 情境兩難（心理題）</div>
+      <p>你上個月買的股票現在 −18%，公司基本面沒有變化，但你發現自己每天盯盤三次、很難專心上課。最符合本課程紀律的做法是？</p>
+      <ol>
+        <li>（A）再撐一下，虧的錢還沒「真正」損失</li>
+      <li>（B）檢視當初的買進理由與停損計畫，按計畫執行 ◉</li>
+      <li>（C）加碼攤平降低成本</li>
+      </ol>
+      <div class="ans"><b>答案 B。</b>沒有「正確漲跌答案」，只有「正確程序答案」——這是心理題與其他題型的本質區別。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q8 · 模擬下單</div>
+      <p>（呈現虛擬下單介面）你在 10:05 想買進台積電式的龍頭股，當前價 1,080 / 買一 1,079 / 賣一 1,081。若你願意成交但不想追價超過 1,080，應該怎麼下？</p>
+      <ol>
+        <li>（A）市價單買進</li>
+        <li>（B）限價 1,080 買進 ◉</li>
+        <li>（C）限價 1,079 買進</li>
+      </ol>
+      <div class="ans"><b>答案 B。</b>模擬下單題直接操作虛擬介面，錯誤的單會真的「以錯誤結果成交」讓學生看到後果。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q9 · 對話挑戰（AI 導師）</div>
+      <p>AI 導師扮演「2020 年剛開戶的大學學長」，學生必須用本課所學說服他「定期定額 0056 型高息 ETF 不等於穩賺」。導師會追問三輪，回答品質由 Gemini 評分。</p>
+      <div class="ans"><b>設計重點：</b>輸出型任務。能用自己話講清楚，才是真的懂——對應 Duolingo 的開口說環節。</div>
+    </div>
+
+    <div class="quiz">
+      <div class="q-type">Q10 · 複習間隔題</div>
+      <p>系統自動從錯題本抽出「1.3.2 違約交割」，但你上次選對了變形版——這次改問：「T+2 中午才發現餘額不足，寬限到幾點？超過會怎樣？」</p>
+      <div class="ans"><b>設計重點：</b>同概念換角度重考，間隔 1/3/7 天三輪。這是唯一「不占愛心」的題型，鼓勵主動複習。</div>
+    </div>
+  </section>
+
+  <!-- ============ 05 遊戲機制對照 ============ -->
+  <section id="s5">
+    <div class="sec-head">
+      <span class="sec-no">05 / GAME MECHANICS</span>
+      <h2 class="sec-title">遊戲機制對照表</h2>
+    </div>
+    <p>左欄是 Duolingo 已驗證的機制，中欄是 LevelVest 的對應實作（含現有系統可直用的部分），右欄是它服務的教學目的——<strong>沒有教學目的的機制不做</strong>。</p>
+    <table>
+      <thead><tr><th>Duolingo 機制</th><th>LevelVest 實作</th><th>教學目的</th></tr></thead>
+      <tbody>
+        <tr><td>Hearts 愛心（5 顆）</td><td>現有 hearts/maxHearts 直用；錯題扣 1</td><td>謹慎作答，模擬真金白銀的代價感</td></tr>
+        <tr><td>練習回血</td><td>愛心歸零 → 解鎖「錯題練習室」，通關補滿</td><td>把懲罰出口變成複習入口</td></tr>
+        <tr><td>Gems 寶石</td><td>現有 gems 直用；來源＝星星與每日任務</td><td>延遲滿足，獎勵沉澱</td></tr>
+        <tr><td>Streak 連續天數</td><td>現有 streak 直用＋連續 7 天贈「停損紀律官」徽章</td><td>習慣養成；把紀律詞彙縫進獎勵</td></tr>
+        <tr><td>Streak Freeze</td><td>寶石換「連續冰凍券」，最多預存 2 天</td><td>允許失誤，防止棄坑</td></tr>
+        <tr><td>週聯盟排行榜</td><td>現有 Leaderboard 強化：分組 15 人，週 XP 結算升降級</td><td>同儕壓力＋分級避免被大神勸退</td></tr>
+        <tr><td>每日任務</td><td>3 題小任務（如：完成 1 次計算題、寫 1 則日記）</td><td>每日打開的具體理由</td></tr>
+        <tr><td>朋友任務</td><td>邀 1–3 位好友共解 30 題拿雙人寶箱</td><td>社交綁定，降低流失</td></tr>
+        <tr><td>Legendary 傳奇關</td><td>每課 3 星後可挑戰「傳奇重考」（變形題、雙倍 XP）</td><td>給快學生的延伸跑道</td></tr>
+        <tr><td>寶箱關卡</td><td>每章節中段隨機 1 個 Chest 節點（圖鑑、吉祥物配件）</td><td>節奏變化，避免單調</td></tr>
+        <tr><td>XP 加速器</td><td>連續答對 5 題觸發 15 分鐘雙倍 XP</td><td>正向動能的正回饋</td></tr>
+        <tr><td>月度挑戰</td><td>每月主題（如「股東會月」「除息月」）＋限時徽章</td><td>新鮮感與時事掛鉤</td></tr>
+        <tr><td>決策日記</td><td>現有 TradeJournal 直用；與 S6 心理課連動評分</td><td>程序性反思，核心素養</td></tr>
+        <tr><td>畢業證書</td><td>S10 通過 → 可分享的認證頁（含 90 天模擬盤成績）</td><td>終點儀式感＋外部炫耀動機</td></tr>
+      </tbody>
+    </table>
+
+    <div class="note">經濟設計原則：寶石<strong>不可購買</strong>，只能透過學習獲得——這是教育產品與賭博化產品的分界線。愛心可以看廣告或做練習補回，但絕不能用現金直接購買「免錯權」。</div>
+  </section>
+
+  <!-- ============ 06 難度曲線 ============ -->
+  <section id="s6">
+    <div class="sec-head">
+      <span class="sec-no">06 / DIFFICULTY &amp; UNLOCK</span>
+      <h2 class="sec-title">難度曲線、解鎖與徽章</h2>
+    </div>
+
+    <h3>解鎖規則</h3>
+    <ul class="plain">
+      <li><strong>線性推進：</strong>單元內課程依序解鎖，章節間以 BOSS 為唯一門檻。</li>
+      <li><strong>跳級測驗：</strong>有經驗的學生可在每章節開頭挑戰 15 題跳級考，通過直接解鎖下一章（對應 Duolingo 的跳級 test）。</li>
+      <li><strong>星級深挖：</strong>每課通過得 1 星，重刷滿分累積至 3 星；全章節 3 星解鎖「傳奇關」。</li>
+      <li><strong>自由複習：</strong>已完成的課永遠可回訪（複習不扣愛心）。</li>
+    </ul>
+
+    <h3>難度曲線設計</h3>
+    <table>
+      <thead><tr><th>階段</th><th>章節</th><th>每課題數</th><th>情境題占比</th><th>設計意圖</th></tr></thead>
+      <tbody>
+        <tr><td class="id">孵化期</td><td>S1–S2</td><td>3–4</td><td>30%</td><td>低門檻建立習慣，錯題溫柔</td></tr>
+        <tr><td class="id">成長期</td><td>S3–S5</td><td>4–5</td><td>50%</td><td>概念密度上升，引入兩難</td></tr>
+        <tr><td class="id">淬鍊期</td><td>S6–S9</td><td>5</td><td>70%</td><td>幾乎全情境化，AI 對話登場</td></tr>
+        <tr><td class="id">試煉期</td><td>S10</td><td>綜合</td><td>100%</td><td>真實模擬盤＋輸出型任務</td></tr>
+      </tbody>
+    </table>
+
+    <h3>行為徽章（對接現有 BehavioralBadge）</h3>
+    <table>
+      <thead><tr><th>徽章</th><th>解鎖條件</th><th>對應素養</th></tr></thead>
+      <tbody>
+        <tr><td>🛡 停損紀律官</td><td>連續 7 天完成每日任務</td><td>習慣紀律</td></tr>
+        <tr><td>🌊 FOMO 終結者</td><td>S6 情境題滿分 3 次</td><td>情緒識別</td></tr>
+        <tr><td>📉 處置效應克服者</td><td>日記中「停損執行」標記 ×5</td><td>行為修正</td></tr>
+        <tr><td>💰 現金為王衛士</td><td>模擬盤中保留現金 ≥30% 通過壓力題</td><td>部位管理</td></tr>
+        <tr><td>🧮 成本精算師</td><td>計算題連續 10 題正確</td><td>數感</td></tr>
+        <tr><td>🎓 心魔獵人</td><td>BOSS 6 全對</td><td>心理素質</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============ 07 安全合規 ============ -->
+  <section id="s7">
+    <div class="sec-head">
+      <span class="sec-no">07 / CONTENT SAFETY</span>
+      <h2 class="sec-title">內容安全與合約紅線</h2>
+    </div>
+    <p>投資教育產品的每一題都在法律邊緣行走。以下是命題時的絕對紅線：</p>
+    <ul class="plain">
+      <li><strong>不出預測題。</strong>任何「明天會怎樣」的選項都不存在；所有情境題考程序與原理，不考漲跌。</li>
+      <li><strong>不使用真實推薦標的。</strong>個股情境用虛構代號或歷史已公開案例，全程標註「虛構情境」。</li>
+      <li><strong>數字附時效註記。</strong>手續費、稅率、制度門檻一律加註「以最新公告為準」——制度會改，課程數據要走版本控制。</li>
+      <li><strong>高風險單元加警示層。</strong>信用交易與衍生品章節開頭強制顯示風險等級提示，語氣與介面視覺同步變重。</li>
+      <li><strong>免責聲明常駐。</strong>App 設定頁與每章結尾固定一屏：本產品為教育用途，不構成任何投資建議。</li>
+      <li><strong>詐騙免疫是教學目標。</strong>錯誤偵測題型把「話術拆解」當正式課綱——這是股票教育裡最被低估的救命內容。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 08 落地路線 ============ -->
+  <section id="s8">
+    <div class="sec-head">
+      <span class="sec-no">08 / ROADMAP</span>
+      <h2 class="sec-title">落地路線圖 — 接進 LevelVest</h2>
+    </div>
+
+    <h3>現有資產盤點</h3>
+    <p>LevelVest 現有程式碼已具備：技能樹（<span style="font-family:var(--mono);font-size:.82rem">SkillTree</span>）、愛心／寶石／等級（<span style="font-family:var(--mono);font-size:.82rem">UserStats</span>）、決策日記（<span style="font-family:var(--mono);font-size:.82rem">TradeJournal</span>）、排行榜（<span style="font-family:var(--mono);font-size:.82rem">Leaderboard</span>）、行為徽章（<span style="font-family:var(--mono);font-size:.82rem">BehavioralBadge</span>）。課程內容目前全部在 <span style="font-family:var(--mono);font-size:.82rem">src/data/mockData.ts</span>——本藍圖的所有課表可直接擴充進這個檔案。</p>
+
+    <h3>三階段里程碑</h3>
+    <table>
+      <thead><tr><th>階段</th><th>時程</th><th>內容</th><th>題型</th></tr></thead>
+      <tbody>
+        <tr><td class="id">MVP</td><td>4 週</td><td>S1 全部 13 課上線，BOSS 1，每日任務</td><td>概念選擇、計算應用、排序流程</td></tr>
+        <tr><td class="id">v1</td><td>+8 週</td><td>S2–S3、錯題練習室、星級與傳奇重考、週聯盟升降級</td><td>+ 數據解讀、情境兩難、錯誤偵測</td></tr>
+        <tr><td class="id">v2</td><td>+16 週</td><td>S4–S10 全主線、90 天模擬盤、AI 導師對話、畢業證書</td><td>+ 模擬下單、對話挑戰（Gemini）</td></tr>
+      </tbody>
+    </table>
+
+    <h3>內容生產管線</h3>
+    <div class="flow">
+      <div class="step"><span class="n">1</span><span class="t">Gemini 初稿</span><span class="d">以本藍圖單元為 prompt 骨架，批量生成題庫 JSON</span></div>
+      <div class="step"><span class="n">2</span><span class="t">人工審核</span><span class="d">逐題檢查紅線（無預測、無薦股、數字正確）</span></div>
+      <div class="step"><span class="n">3</span><span class="t">Schema 入庫</span><span class="d">擴充 mockData / 遠端 JSON，走版本控制</span></div>
+      <div class="step"><span class="n">4</span><span class="t">A/B 與迭代</span><span class="d">追蹤每題錯誤率，&gt;40% 錯誤率 = 題目有問題，不是學生有問題</span></div>
+    </div>
+
+    <h3>單課資料結構建議</h3>
+    <div class="note" style="font-family:var(--mono);font-size:.78rem;line-height:1.7;background:var(--wash);padding:14px 16px;border-left:2px solid var(--accent);">
+{ id: "1.3.2", unitId: "s1-u3",<br>
+&nbsp;&nbsp;title: "違約交割的代價", type: "scenario",<br>
+&nbsp;&nbsp;xps: 15, stars: 3, status: "locked",<br>
+&nbsp;&nbsp;steps: [ concept, example, quiz×4, summary ],<br>
+&nbsp;&nbsp;prereq: ["1.3.1"], tag: "交割風險" }
+    </div>
+
+    <p style="margin-top:28px;">最後一件重要的事：<strong>課程永遠不會「設計完」。</strong>台股制度會改（零股、當沖稅率、處置股門檻都動過），市況會產生新的心理案例。本藍圖的 38 個單元是骨架，每季一次的「市況單元」更新（月度挑戰的形式）才是讓課程活著的部分。</p>
+  </section>
+
+  <div class="colophon">
+    LevelVest 課程藍圖 v1.0 · 2026-09-22 · 本文件為產品設計用途，所有數據與題目均為教學示例，不構成投資建議；費率與制度以主管機關最新公告為準。
+  </div>
+
+</div>
+</body>
+</html>
