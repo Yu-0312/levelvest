@@ -8,6 +8,7 @@
 
 [![GitHub repo](https://img.shields.io/badge/repo-LevelVest-181717?logo=github)](https://github.com/Yu-0312/levelvest)
 [![Built with](https://img.shields.io/badge/built%20in-Google%20AI%20Studio-8E75B2?logo=googleaistudio&logoColor=white)](https://ai.studio/apps/7783595c-84c6-4d57-ab9c-b10325139f56)
+[![Curriculum](https://img.shields.io/badge/課程設計-藍圖-3f7d15)](https://yu-0312.github.io/levelvest/curriculum-blueprint.html)
 
 </div>
 
@@ -23,6 +24,8 @@ LevelVest 是一款專為 **Gen Z 與投資新手**打造的遊戲化學習 App�
 - 🔊 **音效回饋** — 點擊、成功、失誤、獲得寶石四種音效（Web Audio 合成，可關閉）
 
 教學內容涵蓋：什麼是股票與張/股、盤中零股交易、T+2 交割制度與違約交割風險、紅 K 綠 K、20MA 月線生命線等台股實戰主題。
+
+📖 **完整課程設計藍圖**（10 章節 / 38 單元 / 約 170 課 / 10 種題型 / 遊戲機制對照）→ [線上閱讀](https://yu-0312.github.io/levelvest/curriculum-blueprint.html) · [原始檔](public/curriculum-blueprint.html)
 
 ## 🧱 技術架構
 
