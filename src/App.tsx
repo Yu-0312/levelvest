@@ -1,58 +1,122 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   MapPin,
   BookMarked,
   Award,
   Trophy,
-  Sparkles,
-  RotateCcw,
-  CheckCircle2,
-  TrendingUp,
-  Shield,
-  Zap,
 } from 'lucide-react';
 import {
   TabType,
   UserStats,
-  Unit,
-  LessonNode,
   TradeDecision,
   BehavioralBadge,
   LeaderboardStudent,
+  OnboardingProfile,
+  LessonProgress,
+  Section,
+  Lesson,
+  DailyState,
 } from './types';
 import {
   initialStats,
-  unitsData,
   initialTradeDecisions,
   badgesData,
   leaderboardStudents,
+  initialDaily,
+  titleFromProfile,
 } from './data/mockData';
+import { curriculum } from './data/curriculum';
 import { Header } from './components/Header';
 import { SkillTree } from './components/SkillTree';
-import { LessonModal } from './components/LessonModal';
+import { LessonPlayer } from './components/LessonPlayer';
+import { OnboardingSurvey } from './components/OnboardingSurvey';
+import { DailyTasks } from './components/DailyTasks';
 import { TradeJournal } from './components/TradeJournal';
 import { Leaderboard } from './components/Leaderboard';
 import { HeartRefillModal } from './components/HeartRefillModal';
 import { WisdomModal } from './components/WisdomModal';
-import { GenericReviewModal } from './components/GenericReviewModal';
 import { sound } from './utils/audio';
 
-export default function App() {
-  const [stats, setStats] = useState<UserStats>(initialStats);
-  const [units, setUnits] = useState<Unit[]>(unitsData);
-  const [tradeDecisions, setTradeDecisions] = useState<TradeDecision[]>(initialTradeDecisions);
-  const [badges, setBadges] = useState<BehavioralBadge[]>(badgesData);
-  const [students, setStudents] = useState<LeaderboardStudent[]>(leaderboardStudents);
-  const [currentTab, setCurrentTab] = useState<TabType>('learn');
+const LS_KEY = 'levelvest-save-v1';
 
-  // Modals state
-  const [activeLessonNode, setActiveLessonNode] = useState<LessonNode | null>(null);
-  const [isInteractiveLessonOpen, setIsInteractiveLessonOpen] = useState(false);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+interface SaveState {
+  onboarded: boolean;
+  profile: OnboardingProfile | null;
+  stats: UserStats;
+  progress: LessonProgress;
+  unlockedSections: string[];
+  trades: TradeDecision[];
+  badges: BehavioralBadge[];
+  daily: DailyState;
+}
+
+function loadSave(): SaveState | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as SaveState;
+  } catch {
+    return null;
+  }
+}
+
+function persist(state: SaveState) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch {
+    /* ignore quota errors */
+  }
+}
+
+export default function App() {
+  const saved = useMemo(() => loadSave(), []);
+
+  const [onboarded, setOnboarded] = useState(saved?.onboarded ?? false);
+  const [profile, setProfile] = useState<OnboardingProfile | null>(saved?.profile ?? null);
+  const [stats, setStats] = useState<UserStats>(saved?.stats ?? initialStats);
+  const [progress, setProgress] = useState<LessonProgress>(saved?.progress ?? {});
+  const [unlockedSections, setUnlockedSections] = useState<string[]>(
+    saved?.unlockedSections ?? ['s1']
+  );
+  const [tradeDecisions, setTradeDecisions] = useState<TradeDecision[]>(
+    saved?.trades ?? initialTradeDecisions
+  );
+  const [badges, setBadges] = useState<BehavioralBadge[]>(saved?.badges ?? badgesData);
+  const [daily, setDaily] = useState<DailyState>(saved?.daily ?? initialDaily);
+  const [students, setStudents] = useState<LeaderboardStudent[]>(leaderboardStudents);
+
+  const [currentTab, setCurrentTab] = useState<TabType>('learn');
+  const [activeSection, setActiveSection] = useState<Section | null>(null);
+  const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+  const [isLessonOpen, setIsLessonOpen] = useState(false);
   const [isHeartRefillOpen, setIsHeartRefillOpen] = useState(false);
   const [isWisdomModalOpen, setIsWisdomModalOpen] = useState(false);
 
-  // Sound toggle
+  // Persist
+  useEffect(() => {
+    persist({
+      onboarded,
+      profile,
+      stats,
+      progress,
+      unlockedSections,
+      trades: tradeDecisions,
+      badges,
+      daily,
+    });
+  }, [onboarded, profile, stats, progress, unlockedSections, tradeDecisions, badges, daily]);
+
+  const handleOnboard = (p: OnboardingProfile) => {
+    const title = titleFromProfile(p);
+    setProfile(p);
+    setStats((prev) => ({
+      ...prev,
+      userName: p.name,
+      title,
+    }));
+    setOnboarded(true);
+  };
+
   const handleToggleSound = () => {
     const nextVal = !stats.soundEnabled;
     sound.enabled = nextVal;
@@ -60,18 +124,14 @@ export default function App() {
     if (nextVal) sound.playClick();
   };
 
-  // Heart deduction on wrong quiz answer
   const handleDeductHeart = () => {
     setStats((prev) => {
       const nextHearts = Math.max(0, prev.hearts - 1);
-      if (nextHearts === 0) {
-        setIsHeartRefillOpen(true);
-      }
+      if (nextHearts === 0) setIsHeartRefillOpen(true);
       return { ...prev, hearts: nextHearts };
     });
   };
 
-  // Heart refill with Gems (50 Gems for full 5 hearts)
   const handleRefillWithGems = () => {
     if (stats.gems < 50) return;
     sound.playSuccess();
@@ -83,7 +143,6 @@ export default function App() {
     setIsHeartRefillOpen(false);
   };
 
-  // Wisdom refill (+1 heart)
   const handleClaimWisdomHeart = () => {
     setStats((prev) => ({
       ...prev,
@@ -91,83 +150,83 @@ export default function App() {
     }));
   };
 
-  // Complete lesson rewards
-  const handleCompleteLesson = (xpGained: number, gemsGained: number) => {
+  /** Unlock next section if current section's BOSS is completed */
+  const maybeUnlockNext = (sectionId: string, updated: LessonProgress) => {
+    const section = curriculum.find((s) => s.id === sectionId);
+    if (!section) return;
+    const boss = section.lessons.find((l) => l.isBoss);
+    if (!boss || !updated[boss.id]?.completed) return;
+    const idx = curriculum.findIndex((s) => s.id === sectionId);
+    const next = curriculum[idx + 1];
+    if (next) {
+      setUnlockedSections((prev) =>
+        prev.includes(next.id) ? prev : [...prev, next.id]
+      );
+    }
+  };
+
+  const handleCompleteLesson = (lessonId: string, stars: number, xp: number, gems: number) => {
+    setProgress((prev) => {
+      const updated: LessonProgress = {
+        ...prev,
+        [lessonId]: { stars: Math.max(stars, prev[lessonId]?.stars ?? 0), completed: true },
+      };
+      if (activeSection) maybeUnlockNext(activeSection.id, updated);
+      return updated;
+    });
+
     setStats((prev) => {
-      let newXp = prev.xp + xpGained;
+      let newXp = prev.xp + xp;
       let newLevel = prev.level;
       let newNextLevelXp = prev.nextLevelXp;
       let newTitle = prev.title;
-
       if (newXp >= newNextLevelXp) {
         newLevel += 1;
         newXp -= newNextLevelXp;
-        newNextLevelXp = Math.round(newNextLevelXp * 1.4);
-        if (newLevel === 4) newTitle = '臺大當沖獵手';
-        if (newLevel >= 5) newTitle = '校園紀律傳奇';
+        newNextLevelXp = Math.round(newNextLevelXp * 1.35);
+        if (newLevel >= 5 && profile) newTitle = '紀律鍛造者';
+        if (newLevel >= 8 && profile) newTitle = '校園投資傳奇';
       }
-
       return {
         ...prev,
         xp: newXp,
         level: newLevel,
         nextLevelXp: newNextLevelXp,
         title: newTitle,
-        gems: prev.gems + gemsGained,
+        gems: prev.gems + gems,
       };
     });
 
-    // Update user's weekly XP in leaderboard
+    // Daily tasks
+    setDaily((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) => {
+        if (t.id === 'd1') return { ...t, done: Math.min(t.target, t.done + 1) };
+        return t;
+      }),
+    }));
+
+    // Leaderboard sync
     setStudents((prev) =>
-      prev.map((s) => (s.isCurrentUser ? { ...s, weeklyXp: s.weeklyXp + xpGained } : s))
-    );
-
-    // Update Unit 2 Node 4 status to 3 stars
-    setUnits((prevUnits) =>
-      prevUnits.map((u) => {
-        if (u.id === 'unit-2') {
-          return {
-            ...u,
-            nodes: u.nodes.map((n) =>
-              n.id === 'node-4'
-                ? { ...n, stars: 3, status: 'completed' as const }
-                : n
-            ),
-          };
-        }
-        if (u.id === 'unit-3') {
-          // Unlock unit 3 node 5!
-          return {
-            ...u,
-            nodes: u.nodes.map((n, idx) =>
-              idx === 0 ? { ...n, status: 'active' as const } : n
-            ),
-          };
-        }
-        return u;
-      })
-    );
-
-    // Update 20MA badge progress
-    setBadges((prevBadges) =>
-      prevBadges.map((b) =>
-        b.id === 'badge-3'
-          ? { ...b, progress: Math.min(b.maxProgress, b.progress + 1), unlocked: true }
-          : b
-      )
+      prev.map((s) => (s.isCurrentUser ? { ...s, weeklyXp: s.weeklyXp + xp } : s))
     );
   };
 
-  // Log trade decision to journal
+  const handleWrongAnswer = () => {
+    handleDeductHeart();
+  };
+
   const handleLogDecision = (decision: TradeDecision) => {
     setTradeDecisions((prev) => [decision, ...prev]);
-
-    // Check / update "新手啟航" and "鋼鐵紀律者" badge
-    setBadges((prevBadges) =>
-      prevBadges.map((b) => {
-        if (b.id === 'badge-4') {
-          return { ...b, progress: 1, unlocked: true };
-        }
+    setDaily((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) =>
+        t.id === 'd3' ? { ...t, done: Math.min(t.target, t.done + 1) } : t
+      ),
+    }));
+    setBadges((prev) =>
+      prev.map((b) => {
+        if (b.id === 'badge-4') return { ...b, progress: 1, unlocked: true };
         if (b.id === 'badge-1') {
           const newProgress = Math.min(b.maxProgress, b.progress + 1);
           return { ...b, progress: newProgress, unlocked: newProgress >= b.maxProgress };
@@ -177,120 +236,74 @@ export default function App() {
     );
   };
 
-  // Node selection from Skill Tree
-  const handleSelectNode = (node: LessonNode) => {
-    setActiveLessonNode(node);
-    if (node.id === 'node-4') {
-      // Main interactive 3-step micro-lesson
-      setIsInteractiveLessonOpen(true);
-    } else {
-      // Concept review modal for other nodes
-      setIsReviewModalOpen(true);
-    }
+  const handleSelectLesson = (section: Section, lesson: Lesson) => {
+    setActiveSection(section);
+    setActiveLesson(lesson);
+    setIsLessonOpen(true);
   };
+
+  // Onboarding gate
+  if (!onboarded) {
+    return <OnboardingSurvey onComplete={handleOnboard} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-['Nunito',_'Noto_Sans_TC',_system-ui,_sans-serif]">
-      {/* Top Header / Gamification Bar (Always Visible) */}
       <Header
         stats={stats}
         onToggleSound={handleToggleSound}
         onOpenHeartRefill={() => setIsHeartRefillOpen(true)}
       />
 
-      {/* Main Content Area */}
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
-        {/* Navigation Tabs (Top Pill Selector for Desktop & Tablets) */}
+        {/* Tabs */}
         <div className="pt-3 px-4 flex items-center justify-center">
           <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black">
-            <button
-              id="tab-learn"
-              onClick={() => {
-                sound.playClick();
-                setCurrentTab('learn');
-              }}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition-all cursor-pointer ${
-                currentTab === 'learn'
-                  ? 'bg-white text-emerald-800 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <MapPin className="w-4 h-4 text-[#58CC02]" />
-              <span>學習地圖</span>
-            </button>
-
-            <button
-              id="tab-leaderboard"
-              onClick={() => {
-                sound.playClick();
-                setCurrentTab('leaderboard');
-              }}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition-all cursor-pointer ${
-                currentTab === 'leaderboard'
-                  ? 'bg-white text-amber-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Trophy className="w-4 h-4 text-amber-500 fill-amber-400" />
-              <span>社群聯賽</span>
-            </button>
-
-            <button
-              id="tab-journal"
-              onClick={() => {
-                sound.playClick();
-                setCurrentTab('journal');
-              }}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition-all cursor-pointer ${
-                currentTab === 'journal'
-                  ? 'bg-white text-emerald-800 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <BookMarked className="w-4 h-4 text-emerald-600" />
-              <span>決策日記</span>
-              {tradeDecisions.length > 0 && (
-                <span className="bg-emerald-100 text-emerald-800 text-[10px] px-1.5 py-0.2 rounded-full">
-                  {tradeDecisions.length}
-                </span>
-              )}
-            </button>
-
-            <button
-              id="tab-badges"
-              onClick={() => {
-                sound.playClick();
-                setCurrentTab('badges');
-              }}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition-all cursor-pointer ${
-                currentTab === 'badges'
-                  ? 'bg-white text-emerald-800 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Award className="w-4 h-4 text-amber-500" />
-              <span>成就勳章</span>
-            </button>
+            {(
+              [
+                ['learn', '學習地圖', MapPin, 'text-[#58CC02]'],
+                ['leaderboard', '社群聯賽', Trophy, 'text-amber-500'],
+                ['journal', '決策日記', BookMarked, 'text-emerald-600'],
+                ['badges', '成就勳章', Award, 'text-amber-500'],
+              ] as const
+            ).map(([tab, label, Icon, color]) => (
+              <button
+                key={tab}
+                onClick={() => {
+                  sound.playClick();
+                  setCurrentTab(tab);
+                }}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                  currentTab === tab
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Icon className={`w-4 h-4 ${color}`} />
+                <span>{label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Tab 1: The Duolingo Skill Tree Path */}
         {currentTab === 'learn' && (
-          <div className="flex-1 flex flex-col justify-start">
+          <div className="flex-1 flex flex-col">
+            <div className="px-4 pt-3">
+              <DailyTasks daily={daily} userName={stats.userName || '同學'} />
+            </div>
             <SkillTree
-              units={units}
-              activeNodeId="node-4"
-              onSelectNode={handleSelectNode}
+              sections={curriculum}
+              progress={progress}
+              unlockedSectionIds={unlockedSections}
+              onSelectLesson={handleSelectLesson}
             />
           </div>
         )}
 
-        {/* Tab 2: Social Leaderboard & Leagues */}
         {currentTab === 'leaderboard' && (
           <Leaderboard students={students} userXp={stats.xp} />
         )}
 
-        {/* Tab 3: Trade Journal & Ticker Passport */}
         {currentTab === 'journal' && (
           <TradeJournal
             decisions={tradeDecisions}
@@ -299,7 +312,6 @@ export default function App() {
           />
         )}
 
-        {/* Tab 4: Dedicated Behavioral Badges Showcase */}
         {currentTab === 'badges' && (
           <div className="max-w-md mx-auto w-full px-4 py-6 pb-24 space-y-4">
             <div className="bg-white rounded-3xl p-5 border-2 border-slate-200 text-center shadow-xs">
@@ -308,7 +320,7 @@ export default function App() {
               </div>
               <h2 className="text-xl font-black text-slate-800">行為金融榮譽堂</h2>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                培養巴菲特級別的心理素質。每一個徽章，都代表你戰勝了一次市場人性弱點！
+                每一個徽章，都代表你戰勝了一次市場人性弱點！
               </p>
             </div>
 
@@ -332,10 +344,7 @@ export default function App() {
                         {b.tag}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-                      {b.description}
-                    </p>
-                    {/* Progress bar */}
+                    <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">{b.description}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
                         <div
@@ -355,103 +364,56 @@ export default function App() {
         )}
       </main>
 
-      {/* Bottom Sticky Navigation Bar for Mobile */}
-      <nav
-        id="bottom-nav"
-        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-200 py-2 px-3 shadow-lg md:hidden"
-      >
+      {/* Mobile bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-200 py-2 px-3 shadow-lg md:hidden">
         <div className="max-w-md mx-auto flex items-center justify-between">
-          <button
-            onClick={() => {
-              sound.playClick();
-              setCurrentTab('learn');
-            }}
-            className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
-              currentTab === 'learn'
-                ? 'text-[#58CC02] font-black scale-105'
-                : 'text-slate-400 font-bold hover:text-slate-600'
-            }`}
-          >
-            <MapPin className="w-5 h-5" />
-            <span className="text-[10px]">學習地圖</span>
-          </button>
-
-          <button
-            onClick={() => {
-              sound.playClick();
-              setCurrentTab('leaderboard');
-            }}
-            className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
-              currentTab === 'leaderboard'
-                ? 'text-amber-600 font-black scale-105'
-                : 'text-slate-400 font-bold hover:text-slate-600'
-            }`}
-          >
-            <Trophy className="w-5 h-5" />
-            <span className="text-[10px]">社群聯賽</span>
-          </button>
-
-          <button
-            onClick={() => {
-              sound.playClick();
-              setCurrentTab('journal');
-            }}
-            className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
-              currentTab === 'journal'
-                ? 'text-emerald-700 font-black scale-105'
-                : 'text-slate-400 font-bold hover:text-slate-600'
-            }`}
-          >
-            <BookMarked className="w-5 h-5" />
-            <span className="text-[10px]">決策日記</span>
-          </button>
-
-          <button
-            onClick={() => {
-              sound.playClick();
-              setCurrentTab('badges');
-            }}
-            className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
-              currentTab === 'badges'
-                ? 'text-amber-600 font-black scale-105'
-                : 'text-slate-400 font-bold hover:text-slate-600'
-            }`}
-          >
-            <Award className="w-5 h-5" />
-            <span className="text-[10px]">紀律勳章</span>
-          </button>
+          {(
+            [
+              ['learn', '學習地圖', MapPin],
+              ['leaderboard', '社群聯賽', Trophy],
+              ['journal', '決策日記', BookMarked],
+              ['badges', '紀律勳章', Award],
+            ] as const
+          ).map(([tab, label, Icon]) => (
+            <button
+              key={tab}
+              onClick={() => {
+                sound.playClick();
+                setCurrentTab(tab);
+              }}
+              className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+                currentTab === tab
+                  ? 'text-[#58CC02] font-black scale-105'
+                  : 'text-slate-400 font-bold hover:text-slate-600'
+              }`}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="text-[10px]">{label}</span>
+            </button>
+          ))}
         </div>
       </nav>
 
-      {/* Interactive Micro-Lesson Modal (3-step flow for Node 4 "20MA 月線生命線") */}
-      {activeLessonNode && (
-        <LessonModal
-          node={activeLessonNode}
-          hearts={stats.hearts}
-          isOpen={isInteractiveLessonOpen}
-          onClose={() => setIsInteractiveLessonOpen(false)}
-          onDeductHeart={handleDeductHeart}
-          onCompleteLesson={handleCompleteLesson}
-          onLogDecisionToJournal={handleLogDecision}
-          onNavigateToJournal={() => setCurrentTab('journal')}
+      {/* Lesson player */}
+      {activeSection && activeLesson && (
+        <LessonPlayer
+          section={activeSection}
+          lesson={activeLesson}
+          isOpen={isLessonOpen}
+          onClose={() => setIsLessonOpen(false)}
+          onComplete={handleCompleteLesson}
+          onWrongAnswer={handleWrongAnswer}
+          onCorrectCalcOrData={() => {
+            setDaily((prev) => ({
+              ...prev,
+              tasks: prev.tasks.map((t) =>
+                t.id === 'd2' ? { ...t, done: Math.min(t.target, t.done + 1) } : t
+              ),
+            }));
+          }}
         />
       )}
 
-      {/* Generic Review / Practice Modal for completed nodes */}
-      <GenericReviewModal
-        node={activeLessonNode}
-        isOpen={isReviewModalOpen}
-        onClose={() => setIsReviewModalOpen(false)}
-        onReward={(xp, gems) => {
-          setStats((prev) => ({
-            ...prev,
-            xp: prev.xp + xp,
-            gems: prev.gems + gems,
-          }));
-        }}
-      />
-
-      {/* Heart Refill Modal */}
       <HeartRefillModal
         hearts={stats.hearts}
         maxHearts={stats.maxHearts}
@@ -465,7 +427,6 @@ export default function App() {
         }}
       />
 
-      {/* Charlie Munger Wisdom Modal */}
       <WisdomModal
         isOpen={isWisdomModalOpen}
         onClose={() => setIsWisdomModalOpen(false)}
