@@ -134,7 +134,7 @@ npm run preview      # 預覽建置結果
 npm run lint         # TypeScript 型別檢查（tsc --noEmit）
 ```
 
-> 💡 學習進度存在瀏覽器 localStorage（`levelvest-save-v1`）。想重新跑一次新手引導，在開發者工具執行 `localStorage.removeItem('levelvest-save-v1')` 後重新整理即可。
+> 💡 學習進度存在瀏覽器 localStorage（`levelvest-save-v1`）。要重新開始時，點右上角**齒輪 ⚙️ →「重置學習進度」**再點一次確認即可；進階做法是在開發者工具執行 `localStorage.removeItem('levelvest-save-v1')` 後重新整理。
 
 <br />
 

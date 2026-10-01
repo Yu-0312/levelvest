@@ -36,6 +36,7 @@ import { TradeJournal } from './components/TradeJournal';
 import { Leaderboard } from './components/Leaderboard';
 import { HeartRefillModal } from './components/HeartRefillModal';
 import { SkipGradeModal } from './components/SkipGradeModal';
+import { SettingsModal } from './components/SettingsModal';
 import { WisdomModal } from './components/WisdomModal';
 import { sound } from './utils/audio';
 
@@ -95,6 +96,8 @@ export default function App() {
   const [isWisdomModalOpen, setIsWisdomModalOpen] = useState(false);
   /** 跳級確認彈窗的目標章節 */
   const [jumpTarget, setJumpTarget] = useState<Section | null>(null);
+  /** 設定彈窗（含重置進度） */
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   /** 地圖上目前關卡離開視線時，顯示「繼續闖關」懸浮按鈕 */
   const [showContinue, setShowContinue] = useState(false);
 
@@ -175,6 +178,29 @@ export default function App() {
       ...prev,
       hearts: Math.min(prev.maxHearts, prev.hearts + 1),
     }));
+  };
+
+  /** 重置學習進度：清除此瀏覽器存檔，回到起跑前測驗（設定彈窗用） */
+  const handleResetProgress = () => {
+    try {
+      localStorage.removeItem(LS_KEY);
+    } catch {
+      /* ignore */
+    }
+    sound.enabled = initialStats.soundEnabled;
+    setOnboarded(false);
+    setProfile(null);
+    setStats(initialStats);
+    setProgress({});
+    setUnlockedSections(['s1']);
+    setTradeDecisions(initialTradeDecisions);
+    setBadges(badgesData);
+    setDaily({ ...initialDaily, tasks: initialDaily.tasks.map((t) => ({ ...t })) });
+    setStudents(leaderboardStudents);
+    setCurrentTab('learn');
+    setActiveSection(null);
+    setActiveLesson(null);
+    setIsLessonOpen(false);
   };
 
   /** Unlock next section if current section's BOSS is completed */
@@ -313,6 +339,7 @@ export default function App() {
         stats={stats}
         onToggleSound={handleToggleSound}
         onOpenHeartRefill={() => setIsHeartRefillOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
@@ -511,6 +538,13 @@ export default function App() {
           setIsHeartRefillOpen(false);
           setIsWisdomModalOpen(true);
         }}
+      />
+
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onReset={handleResetProgress}
+        stats={stats}
       />
 
       <WisdomModal

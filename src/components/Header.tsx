@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Gem, Heart, Volume2, VolumeX, ShieldCheck, TrendingUp } from 'lucide-react';
+import { Flame, Gem, Heart, Volume2, VolumeX, ShieldCheck, Settings, TrendingUp } from 'lucide-react';
 import { UserStats } from '../types';
 import { sound } from '../utils/audio';
 
@@ -7,12 +7,14 @@ interface HeaderProps {
   stats: UserStats;
   onToggleSound: () => void;
   onOpenHeartRefill: () => void;
+  onOpenSettings: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   stats,
   onToggleSound,
   onOpenHeartRefill,
+  onOpenSettings,
 }) => {
   const [showStreakModal, setShowStreakModal] = useState(false);
 
@@ -115,6 +117,18 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
               )}
+            </button>
+            {/* Settings */}
+            <button
+              id="settings-btn"
+              onClick={() => {
+                sound.playClick();
+                onOpenSettings();
+              }}
+              className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 active:scale-95 transition-transform"
+              title="設定 / 重置進度"
+            >
+              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
