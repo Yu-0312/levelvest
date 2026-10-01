@@ -4,6 +4,7 @@ import {
   BookMarked,
   Award,
   Trophy,
+  Target,
 } from 'lucide-react';
 import {
   TabType,
@@ -34,6 +35,7 @@ import { DailyTasks } from './components/DailyTasks';
 import { TradeJournal } from './components/TradeJournal';
 import { Leaderboard } from './components/Leaderboard';
 import { HeartRefillModal } from './components/HeartRefillModal';
+import { SkipGradeModal } from './components/SkipGradeModal';
 import { WisdomModal } from './components/WisdomModal';
 import { sound } from './utils/audio';
 
@@ -91,6 +93,10 @@ export default function App() {
   const [isLessonOpen, setIsLessonOpen] = useState(false);
   const [isHeartRefillOpen, setIsHeartRefillOpen] = useState(false);
   const [isWisdomModalOpen, setIsWisdomModalOpen] = useState(false);
+  /** 跳級確認彈窗的目標章節 */
+  const [jumpTarget, setJumpTarget] = useState<Section | null>(null);
+  /** 地圖上目前關卡離開視線時，顯示「繼續闖關」懸浮按鈕 */
+  const [showContinue, setShowContinue] = useState(false);
 
   // Persist
   useEffect(() => {
@@ -105,6 +111,27 @@ export default function App() {
       daily,
     });
   }, [onboarded, profile, stats, progress, unlockedSections, tradeDecisions, badges, daily]);
+
+  // 監聽捲動，判斷「當前關卡」是否還在畫面內
+  useEffect(() => {
+    if (currentTab !== 'learn') {
+      setShowContinue(false);
+      return;
+    }
+    const onScroll = () => {
+      const el = document.getElementById('active-lesson-node');
+      if (!el) {
+        setShowContinue(false);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      const visible = r.top < window.innerHeight * 0.75 && r.bottom > window.innerHeight * 0.35;
+      setShowContinue(!visible);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [currentTab, progress, unlockedSections]);
 
   const handleOnboard = (p: OnboardingProfile) => {
     const title = titleFromProfile(p);
@@ -242,13 +269,46 @@ export default function App() {
     setIsLessonOpen(true);
   };
 
+  /** 跳關：把目標關之前（同一章內）未完成的關卡標記為「已跳過」，並直接打開目標關 */
+  const handleSkipToLesson = (section: Section, lesson: Lesson) => {
+    setProgress((prev) => {
+      const updated: LessonProgress = { ...prev };
+      const idx = section.lessons.findIndex((l) => l.id === lesson.id);
+      for (let i = 0; i < idx; i++) {
+        const l = section.lessons[i];
+        if (!updated[l.id]?.completed) {
+          updated[l.id] = { stars: 0, completed: true, skipped: true };
+        }
+      }
+      return updated;
+    });
+    sound.playSuccess();
+    handleSelectLesson(section, lesson);
+  };
+
+  /** 跳級：解鎖目標章節（含中間所有章節），既有進度不受影響 */
+  const handleConfirmJump = () => {
+    if (!jumpTarget) return;
+    const idx = curriculum.findIndex((s) => s.id === jumpTarget.id);
+    const toAdd = curriculum.slice(0, idx + 1).map((s) => s.id);
+    setUnlockedSections((prev) => Array.from(new Set([...prev, ...toAdd])));
+    setJumpTarget(null);
+  };
+
+  /** 這次跳級會一併解鎖、目前尚未解鎖的章節（確認彈窗清單用） */
+  const sectionsToUnlock = useMemo(() => {
+    if (!jumpTarget) return [];
+    const idx = curriculum.findIndex((s) => s.id === jumpTarget.id);
+    return curriculum.slice(0, idx + 1).filter((s) => !unlockedSections.includes(s.id));
+  }, [jumpTarget, unlockedSections]);
+
   // Onboarding gate
   if (!onboarded) {
     return <OnboardingSurvey onComplete={handleOnboard} />;
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-['Nunito',_'Noto_Sans_TC',_system-ui,_sans-serif]">
+    <div className="min-h-screen bg-gradient-to-b from-[#F0F9FF] via-white to-[#F8FAFC] flex flex-col font-['Nunito',_'Noto_Sans_TC',_system-ui,_sans-serif]">
       <Header
         stats={stats}
         onToggleSound={handleToggleSound}
@@ -273,10 +333,10 @@ export default function App() {
                   sound.playClick();
                   setCurrentTab(tab);
                 }}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                   currentTab === tab
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white text-slate-800 shadow-md scale-[1.03]'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 <Icon className={`w-4 h-4 ${color}`} />
@@ -296,6 +356,8 @@ export default function App() {
               progress={progress}
               unlockedSectionIds={unlockedSections}
               onSelectLesson={handleSelectLesson}
+              onSkipToLesson={handleSkipToLesson}
+              onJumpToSection={setJumpTarget}
             />
           </div>
         )}
@@ -381,10 +443,10 @@ export default function App() {
                 sound.playClick();
                 setCurrentTab(tab);
               }}
-              className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+              className={`flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-2xl transition-all cursor-pointer ${
                 currentTab === tab
-                  ? 'text-[#58CC02] font-black scale-105'
-                  : 'text-slate-400 font-bold hover:text-slate-600'
+                  ? 'text-[#58CC02] font-black scale-105 bg-[#F0FFF4] border border-emerald-100'
+                  : 'text-slate-400 font-bold hover:text-slate-600 border border-transparent'
               }`}
             >
               <Icon className="w-5 h-5" />
@@ -393,6 +455,22 @@ export default function App() {
           ))}
         </div>
       </nav>
+
+      {/* 繼續闖關懸浮按鈕：當前關卡離開視線時出現 */}
+      {currentTab === 'learn' && showContinue && (
+        <button
+          onClick={() => {
+            sound.playClick();
+            document
+              .getElementById('active-lesson-node')
+              ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }}
+          className="fixed bottom-20 md:bottom-6 right-4 z-40 bg-[#58CC02] hover:bg-[#4cb502] text-white font-black text-sm pl-3.5 pr-4 py-2.5 rounded-full border-b-4 border-[#3e9302] active:border-b-0 active:translate-y-1 transition-all shadow-lg flex items-center gap-1.5 cursor-pointer rise-in"
+        >
+          <Target className="w-4 h-4 fill-white" />
+          繼續闖關
+        </button>
+      )}
 
       {/* Lesson player */}
       {activeSection && activeLesson && (
@@ -413,6 +491,14 @@ export default function App() {
           }}
         />
       )}
+
+      <SkipGradeModal
+        targetSection={jumpTarget}
+        toUnlock={sectionsToUnlock}
+        isOpen={!!jumpTarget}
+        onClose={() => setJumpTarget(null)}
+        onConfirm={handleConfirmJump}
+      />
 
       <HeartRefillModal
         hearts={stats.hearts}

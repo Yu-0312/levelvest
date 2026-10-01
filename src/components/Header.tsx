@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Gem, Heart, Volume2, VolumeX, ShieldCheck, Sparkles } from 'lucide-react';
+import { Flame, Gem, Heart, Volume2, VolumeX, ShieldCheck, TrendingUp } from 'lucide-react';
 import { UserStats } from '../types';
 import { sound } from '../utils/audio';
 
@@ -27,8 +27,11 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
           {/* Left: Brand & User Level */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl sm:text-2xl font-black tracking-tight text-[#58CC02] flex items-center">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-b from-[#6edd1c] to-[#58CC02] border-b-4 border-[#3e9302] flex items-center justify-center shadow-sm shrink-0">
+                <TrendingUp className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" strokeWidth={3} />
+              </div>
+              <span className="text-xl sm:text-2xl font-black tracking-tight text-[#58CC02] flex items-center select-none">
                 Level<span className="text-slate-800">Vest</span>
               </span>
             </div>
@@ -37,13 +40,13 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-xs font-bold text-slate-700">
                 {stats.userName ? `${stats.userName} · ` : ''}{stats.title}
               </span>
-              <span className="bg-[#58CC02] text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+              <span className="bg-gradient-to-r from-[#58CC02] to-[#8EE000] text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs">
                 Lv.{stats.level}
               </span>
               {/* XP mini bar */}
               <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#58CC02] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#58CC02] to-[#8EE000] rounded-full transition-all duration-500"
                   style={{ width: `${xpPercent}%` }}
                 />
               </div>
@@ -51,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Right: Gamification Badges */}
-          <div className="flex items-center gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {/* Streak Counter Button */}
             <button
               id="streak-button"
@@ -59,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
                 sound.playClick();
                 setShowStreakModal(!showStreakModal);
               }}
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-2xl bg-amber-50 hover:bg-amber-100/80 active:translate-y-0.5 border border-amber-200 text-amber-700 font-extrabold text-xs sm:text-sm transition-transform cursor-pointer"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-xl border-2 border-amber-200 bg-amber-50 hover:bg-amber-100/80 active:translate-y-0.5 text-amber-700 font-extrabold text-xs sm:text-sm transition-transform cursor-pointer"
               title="連續學習紀錄"
             >
               <Flame className="w-4 h-4 text-orange-500 fill-orange-500 animate-pulse" />
@@ -70,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Gems Counter */}
             <div
               id="gems-display"
-              className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 font-extrabold text-xs sm:text-sm"
+              className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-xl border-2 border-sky-200 bg-sky-50 text-sky-700 font-extrabold text-xs sm:text-sm"
               title="投資寶石"
             >
               <Gem className="w-4 h-4 text-sky-500 fill-sky-500" />
@@ -84,10 +87,10 @@ export const Header: React.FC<HeaderProps> = ({
                 sound.playClick();
                 onOpenHeartRefill();
               }}
-              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-2xl border active:translate-y-0.5 font-extrabold text-xs sm:text-sm transition-transform cursor-pointer ${
+              className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-xl border-2 active:translate-y-0.5 font-extrabold text-xs sm:text-sm transition-transform cursor-pointer ${
                 stats.hearts <= 1
-                  ? 'bg-red-50 border-red-300 text-red-600 animate-bounce'
-                  : 'bg-rose-50 border-rose-200 text-rose-600 hover:bg-rose-100/80'
+                  ? 'border-red-300 bg-red-50 text-red-600 animate-bounce'
+                  : 'border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100/80'
               }`}
               title="生命值 (答錯扣除 1 心)"
             >
@@ -120,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex md:hidden items-center justify-between px-1 pt-1.5 mt-1 border-t border-slate-100 text-[11px] font-bold text-slate-600">
           <div className="flex items-center gap-1.5">
             <span className="text-slate-700 font-extrabold">{stats.userName ? `${stats.userName} · ` : ''}{stats.title}</span>
-            <span className="bg-[#58CC02] text-white px-1.5 py-0.2 rounded-full font-black text-[10px]">
+            <span className="bg-gradient-to-r from-[#58CC02] to-[#8EE000] text-white px-1.5 py-0.5 rounded-full font-black text-[10px]">
               Lv.{stats.level}
             </span>
           </div>
@@ -128,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="text-slate-400">XP: {stats.xp}/{stats.nextLevelXp}</span>
             <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#58CC02] rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-[#58CC02] to-[#8EE000] rounded-full transition-all duration-500"
                 style={{ width: `${xpPercent}%` }}
               />
             </div>

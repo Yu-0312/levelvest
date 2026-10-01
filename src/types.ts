@@ -83,7 +83,14 @@ export interface Section {
   lessons: Lesson[];
 }
 
-export type LessonProgress = Record<string, { stars: number; completed: boolean }>;
+export interface LessonProgressEntry {
+  stars: number;
+  completed: boolean;
+  /** true = 以「跳關」越過此關，未實際作答 */
+  skipped?: boolean;
+}
+
+export type LessonProgress = Record<string, LessonProgressEntry>;
 
 /* ── Legacy shapes kept for journal / badges tabs ── */
 

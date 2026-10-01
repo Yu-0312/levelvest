@@ -29,24 +29,35 @@ export const DailyTasks: React.FC<DailyTasksProps> = ({ daily, userName }) => {
             三項全清才算「紀律日」
           </p>
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {daily.tasks.map((task) => {
               const done = task.done >= task.target;
               return (
-                <div key={task.id} className="flex items-center gap-2">
+                <div
+                  key={task.id}
+                  className={`flex items-center gap-2 rounded-xl px-2 py-1.5 -mx-2 transition-colors ${
+                    done ? 'bg-[#F0FFF4]' : 'bg-transparent'
+                  }`}
+                >
                   {done ? (
-                    <CheckCircle2 className="w-4 h-4 text-[#58CC02] shrink-0" />
+                    <CheckCircle2 className="w-5 h-5 text-[#58CC02] fill-[#58CC02] shrink-0 [&>circle]:stroke-white" />
                   ) : (
-                    <Circle className="w-4 h-4 text-slate-300 shrink-0" />
+                    <Circle className="w-5 h-5 text-slate-300 shrink-0" />
                   )}
                   <span
                     className={`text-xs font-bold flex-1 ${
-                      done ? 'text-slate-400 line-through' : 'text-slate-700'
+                      done ? 'text-emerald-700' : 'text-slate-700'
                     }`}
                   >
                     {task.label}
                   </span>
-                  <span className="text-[10px] font-black text-slate-500">
+                  <span
+                    className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                      done
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
                     {Math.min(task.done, task.target)} / {task.target}
                   </span>
                 </div>

@@ -1,6 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, CheckCircle2, XCircle, ChevronRight, Star, Sparkles, BookOpen } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import {
+  X,
+  CheckCircle2,
+  XCircle,
+  ChevronRight,
+  Star,
+  Sparkles,
+  BookOpen,
+  Zap,
+  Gem,
+} from 'lucide-react';
 import { Lesson, Section } from '../types';
 import { Mascot } from './Mascot';
 import { sound } from '../utils/audio';
@@ -32,6 +43,20 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
+
+  // 進到結算畫面時灑彩帶慶祝（BOSS 加碼）
+  useEffect(() => {
+    if (phase !== 'result') return;
+    const timer = setTimeout(() => {
+      confetti({
+        particleCount: lesson?.isBoss ? 160 : 90,
+        spread: lesson?.isBoss ? 100 : 70,
+        origin: { y: 0.6 },
+        colors: ['#58CC02', '#FFC800', '#1CB0F6', '#CE82FF', '#FF4B4B'],
+      });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [phase, lesson?.isBoss]);
 
   // Reset when a new lesson opens
   const lessonId = lesson?.id;
@@ -145,12 +170,12 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
 
             {phase === 'quiz' && (
               <div className="mt-3 flex items-center gap-2">
-                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: section.color }}
-                    animate={{
+                <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
                       width: `${((qIndex + (submitted ? 1 : 0)) / total) * 100}%`,
+                      background: `linear-gradient(90deg, ${section.color}, ${section.color}B3)`,
                     }}
                   />
                 </div>
@@ -216,27 +241,38 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
                     const isCorrect = idx === current.answer;
                     const isSelected = selected === idx;
                     let cls =
-                      'border-slate-200 bg-white hover:border-slate-300 text-slate-700';
+                      'border-slate-200 bg-white hover:bg-slate-50 border-b-slate-300 text-slate-700';
+                    let chipCls = 'bg-slate-100 border-slate-200 text-slate-500';
                     if (submitted) {
-                      if (isCorrect) cls = 'border-emerald-400 bg-emerald-50 text-emerald-900';
-                      else if (isSelected)
-                        cls = 'border-rose-400 bg-rose-50 text-rose-900';
-                      else cls = 'border-slate-100 bg-slate-50 text-slate-400';
+                      if (isCorrect) {
+                        cls = 'border-emerald-400 bg-emerald-50 border-b-emerald-500 text-emerald-900';
+                        chipCls = 'bg-emerald-400 border-emerald-500 text-white';
+                      } else if (isSelected) {
+                        cls = 'border-rose-400 bg-rose-50 border-b-rose-500 text-rose-900';
+                        chipCls = 'bg-rose-400 border-rose-500 text-white';
+                      } else {
+                        cls = 'border-slate-100 bg-slate-50 border-b-slate-100 text-slate-400';
+                        chipCls = 'bg-slate-100 border-slate-200 text-slate-300';
+                      }
                     } else if (isSelected) {
-                      cls = 'border-sky-400 bg-sky-50 text-sky-900 shadow-md';
+                      cls =
+                        'border-sky-400 bg-sky-50 border-b-sky-500 text-sky-900 shadow-md';
+                      chipCls = 'bg-sky-500 border-sky-600 text-white';
                     }
                     return (
                       <button
                         key={idx}
                         onClick={() => handleSelect(idx)}
                         disabled={submitted}
-                        className={`w-full text-left px-4 py-3.5 rounded-2xl border-2 font-bold text-sm transition-all ${cls}`}
+                        className={`w-full text-left px-4 py-3.5 rounded-2xl border-2 border-b-4 font-bold text-sm transition-all active:translate-y-0.5 active:border-b-2 cursor-pointer disabled:cursor-default ${cls}`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center text-xs font-black shrink-0">
+                          <span
+                            className={`w-7 h-7 rounded-lg border-2 flex items-center justify-center text-xs font-black shrink-0 transition-colors ${chipCls}`}
+                          >
                             {String.fromCharCode(65 + idx)}
                           </span>
-                          <span className="flex-1">{choice}</span>
+                          <span className="flex-1 leading-snug">{choice}</span>
                           {submitted && isCorrect && (
                             <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                           )}
@@ -297,16 +333,19 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
             {phase === 'result' && (
               <div className="text-center">
                 <Mascot emotion="celebrating" size="lg" className="mx-auto mb-3" />
-                <h3 className="text-2xl font-black text-slate-800 mb-1">
+                <h3 className="text-2xl font-black text-slate-800 mb-2">
                   {lesson.isBoss ? 'BOSS 通關！' : '課程完成！'}
                 </h3>
-                <div className="flex items-center justify-center gap-1.5 mb-2">
+                <div className="flex items-center justify-center gap-2 mb-2">
                   {[0, 1, 2].map((i) => (
                     <Star
                       key={i}
-                      className={`w-8 h-8 ${
-                        i < stars ? 'fill-amber-400 text-amber-400' : 'text-slate-200'
+                      className={`w-10 h-10 star-pop ${
+                        i < stars
+                          ? 'fill-amber-400 text-amber-400 drop-shadow-sm'
+                          : 'text-slate-200 fill-slate-200'
                       }`}
+                      style={{ animationDelay: `${0.15 + i * 0.18}s` }}
                     />
                   ))}
                 </div>
@@ -316,31 +355,43 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
                 </p>
 
                 <div className="grid grid-cols-2 gap-3 mb-5">
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3">
-                    <p className="text-xs text-emerald-600 font-bold">經驗值</p>
-                    <p className="text-xl font-black text-emerald-700">
-                      +{lesson.isBoss ? 80 : 25} XP
-                    </p>
+                  <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-3 flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500 border-b-4 border-emerald-700 flex items-center justify-center shrink-0">
+                      <Zap className="w-5 h-5 text-white fill-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] text-emerald-600 font-black">經驗值</p>
+                      <p className="text-lg font-black text-emerald-700">
+                        +{lesson.isBoss ? 80 : 25} XP
+                      </p>
+                    </div>
                   </div>
-                  <div className="bg-sky-50 border border-sky-200 rounded-2xl p-3">
-                    <p className="text-xs text-sky-600 font-bold">寶石</p>
-                    <p className="text-xl font-black text-sky-700">
-                      +{lesson.isBoss ? 40 : 12} 💎
-                    </p>
+                  <div className="bg-sky-50 border-2 border-sky-200 rounded-2xl p-3 flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-sky-500 border-b-4 border-sky-700 flex items-center justify-center shrink-0">
+                      <Gem className="w-5 h-5 text-white fill-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] text-sky-600 font-black">寶石</p>
+                      <p className="text-lg font-black text-sky-700">
+                        +{lesson.isBoss ? 40 : 12}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 {lesson.isBoss && (
-                  <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 mb-4">
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-3 mb-4 flex items-center justify-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
                     <p className="text-xs font-black text-amber-800">
-                      🏰 章節 BOSS 已擊敗，下一章解鎖！
+                      章節 BOSS 已擊敗，下一章解鎖！
                     </p>
+                    <Sparkles className="w-4 h-4 text-amber-500" />
                   </div>
                 )}
 
                 <button
                   onClick={handleClose}
-                  className="w-full py-3.5 bg-[#58CC02] hover:bg-[#4cb502] text-white font-black text-base rounded-2xl border-b-4 border-[#3e9302] active:border-b-0 active:translate-y-1 transition-all shadow-md"
+                  className="w-full py-3.5 bg-[#58CC02] hover:bg-[#4cb502] text-white font-black text-base rounded-2xl border-b-4 border-[#3e9302] active:border-b-0 active:translate-y-1 transition-all shadow-md cursor-pointer"
                 >
                   繼續闖關
                 </button>
