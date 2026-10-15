@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Lesson, Section } from '../types';
 import { Mascot } from './Mascot';
+import { mascotSay } from '../utils/mascotBus';
 import { sound } from '../utils/audio';
 
 interface LessonPlayerProps {
@@ -91,12 +92,14 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
     if (selected === current.answer) {
       sound.playSuccess();
       setCorrectCount((c) => c + 1);
+      mascotSay('correct');
       if (lesson.kind === 'calc' || lesson.kind === 'data') {
         onCorrectCalcOrData?.();
       }
     } else {
       sound.playError();
       setWrongCount((w) => w + 1);
+      mascotSay('wrong');
       onWrongAnswer();
     }
   };
@@ -112,6 +115,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
       const xp = lesson.isBoss ? 80 : 25;
       const gems = lesson.isBoss ? 40 : 12;
       onComplete(lesson.id, stars, xp, gems);
+      mascotSay(lesson.isBoss ? 'bossDone' : 'lessonDone');
       setPhase('result');
     }
   };
@@ -133,7 +137,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 40, opacity: 0 }}
-          className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-y-auto shadow-2xl border-2 border-slate-100"
+          className="bg-white w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[calc(100dvh-5.5rem)] sm:max-h-[92vh] overflow-y-auto shadow-2xl border-2 border-slate-100"
         >
           {/* Header */}
           <div
