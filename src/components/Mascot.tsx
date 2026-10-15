@@ -5,12 +5,15 @@ interface MascotProps {
   emotion?: 'happy' | 'celebrating' | 'thinking' | 'oops';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  /** false = 靜止（排行榜頭像等小尺寸用） */
+  animated?: boolean;
 }
 
 export const Mascot: React.FC<MascotProps> = ({
   emotion = 'happy',
   size = 'md',
   className = '',
+  animated = true,
 }) => {
   const sizeClasses = {
     sm: 'w-12 h-12',
@@ -22,7 +25,9 @@ export const Mascot: React.FC<MascotProps> = ({
     <motion.div
       className={`relative inline-flex items-center justify-center select-none ${sizeClasses[size]} ${className}`}
       animate={
-        emotion === 'celebrating'
+        !animated
+          ? undefined
+          : emotion === 'celebrating'
           ? { y: [0, -10, 0, -5, 0], rotate: [0, -4, 4, -2, 0], scale: [1, 1.05, 1, 1.03, 1] }
           : emotion === 'oops'
           ? { x: [0, -5, 5, -5, 5, 0], rotate: [0, -2, 2, -2, 2, 0] }
@@ -63,9 +68,9 @@ export const Mascot: React.FC<MascotProps> = ({
         <path d="M 83 23 C 82 20 80 19 79 20" stroke="#FFF8DC" strokeWidth="1.8" strokeLinecap="round" opacity="0.9" />
 
         {/* ── Floppy ears ── */}
-        <ellipse cx="20" cy="58" rx="14" ry="9" transform="rotate(-28 20 58)" fill="#3B82F6" />
+        <ellipse cx="20" cy="58" rx="14" ry="9" transform="rotate(-28 20 58)" fill="#D62839" />
         <ellipse cx="20" cy="58" rx="8" ry="5" transform="rotate(-28 20 58)" fill="#FFB4C8" />
-        <ellipse cx="100" cy="58" rx="14" ry="9" transform="rotate(28 100 58)" fill="#3B82F6" />
+        <ellipse cx="100" cy="58" rx="14" ry="9" transform="rotate(28 100 58)" fill="#D62839" />
         <ellipse cx="100" cy="58" rx="8" ry="5" transform="rotate(28 100 58)" fill="#FFB4C8" />
 
         {/* ── Cream forehead curl ── */}
@@ -79,41 +84,41 @@ export const Mascot: React.FC<MascotProps> = ({
         />
 
         {/* ── Head / body blob (soft egg) ── */}
-        <ellipse cx="60" cy="64" rx="41" ry="39" fill="#4C8DFF" />
+        <ellipse cx="60" cy="64" rx="41" ry="39" fill="#EF4444" />
         {/* Soft top highlight */}
-        <ellipse cx="58" cy="38" rx="22" ry="10" fill="#93C5FD" opacity="0.45" />
+        <ellipse cx="58" cy="38" rx="22" ry="10" fill="#FCA5A5" opacity="0.5" />
 
         {/* ── Soft cow spots ── */}
         <path
           d="M 30 44 C 33 35 45 34 49 43 C 46 51 32 52 30 44 Z"
-          fill="#1E40AF"
+          fill="#991B1B"
           opacity="0.35"
         />
         <path
           d="M 80 50 C 86 46 95 51 93 60 C 88 67 77 59 80 50 Z"
-          fill="#1E40AF"
+          fill="#991B1B"
           opacity="0.32"
         />
         <path
           d="M 36 90 C 41 85 51 86 53 92 C 48 98 35 97 36 90 Z"
-          fill="#1E40AF"
+          fill="#991B1B"
           opacity="0.28"
         />
 
-        {/* ── Green investor scarf collar ── */}
+        {/* ── Gold investor scarf collar ── */}
         <path
           d="M 26 94 Q 60 108 94 94 L 94 102 Q 60 116 26 102 Z"
-          fill="#58CC02"
+          fill="#FFC800"
         />
         <path
           d="M 28 95 Q 60 105 92 95 L 92 98 Q 60 108 28 98 Z"
-          fill="#7BE030"
+          fill="#FFE27A"
           opacity="0.4"
         />
         {/* Soft side bow (rounded loops, no sharp leaves) */}
-        <ellipse cx="86" cy="100" rx="4.5" ry="4" fill="#46A302" />
-        <ellipse cx="93" cy="96" rx="6" ry="4" transform="rotate(-25 93 96)" fill="#6FD618" />
-        <ellipse cx="92" cy="104" rx="5.5" ry="3.5" transform="rotate(20 92 104)" fill="#58CC02" />
+        <ellipse cx="86" cy="100" rx="4.5" ry="4" fill="#E0A800" />
+        <ellipse cx="93" cy="96" rx="6" ry="4" transform="rotate(-25 93 96)" fill="#FFD84D" />
+        <ellipse cx="92" cy="104" rx="5.5" ry="3.5" transform="rotate(20 92 104)" fill="#FFC800" />
 
         {/* ── Cream muzzle ── */}
         <ellipse cx="60" cy="78" rx="21" ry="14" fill="#FFF1B8" />
@@ -147,9 +152,9 @@ export const Mascot: React.FC<MascotProps> = ({
           <>
             <ellipse cx="63" cy="87" rx="3.5" ry="2.5" fill="#92400E" />
             {/* Thought swirl cheek */}
-            <circle cx="88" cy="72" r="1.5" fill="#93C5FD" opacity="0.8" />
-            <circle cx="93" cy="66" r="2.2" fill="#93C5FD" opacity="0.6" />
-            <circle cx="99" cy="58" r="3" fill="#93C5FD" opacity="0.4" />
+            <circle cx="88" cy="72" r="1.5" fill="#FCA5A5" opacity="0.85" />
+            <circle cx="93" cy="66" r="2.2" fill="#FCA5A5" opacity="0.65" />
+            <circle cx="99" cy="58" r="3" fill="#FCA5A5" opacity="0.45" />
           </>
         ) : (
           <path
@@ -190,8 +195,8 @@ export const Mascot: React.FC<MascotProps> = ({
             <circle cx="50" cy="57.5" r="1.6" fill="#FFFFFF" opacity="0.9" />
             <circle cx="76" cy="57.5" r="1.6" fill="#FFFFFF" opacity="0.9" />
             {/* Soft brows */}
-            <path d="M 39 42 Q 47 39 55 42" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.45" />
-            <path d="M 65 42 Q 73 39 81 42" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.45" />
+            <path d="M 39 42 Q 47 39 55 42" stroke="#991B1B" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.45" />
+            <path d="M 65 42 Q 73 39 81 42" stroke="#991B1B" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.45" />
           </>
         )}
 

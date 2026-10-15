@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
+import { Mascot } from './Mascot';
 import {
   Trophy,
   Clock,
@@ -22,6 +23,16 @@ interface LeaderboardProps {
   students: LeaderboardStudent[];
   userXp: number;
 }
+
+/** 🐂 = 牛牛本人：用紅牛吉祥物取代 emoji，其餘同學照舊 */
+const Avatar: React.FC<{ avatar: string; px: number }> = ({ avatar, px }) =>
+  avatar === '🐂' ? (
+    <span className="inline-block shrink-0" style={{ width: px, height: px }}>
+      <Mascot size="sm" animated={false} className="w-full! h-full!" />
+    </span>
+  ) : (
+    <>{avatar}</>
+  );
 
 export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStudents, userXp }) => {
   const [students, setStudents] = useState<LeaderboardStudent[]>(initialStudents);
@@ -148,7 +159,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStude
           {top3[1] && (
             <div className="flex-1 flex flex-col items-center">
               <div className="relative mb-2 flex flex-col items-center">
-                <span className="text-3xl mb-1 drop-shadow-sm">{top3[1].avatar}</span>
+                <span className="text-3xl mb-1 drop-shadow-sm"><Avatar avatar={top3[1].avatar} px={40} /></span>
                 <span className="bg-slate-200 text-slate-700 font-black text-xs px-2 py-0.5 rounded-full border border-slate-300">
                   #2
                 </span>
@@ -179,7 +190,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStude
             <div className="flex-1 flex flex-col items-center -mt-4">
               <div className="relative mb-2 flex flex-col items-center">
                 <div className="absolute -top-5 text-xl animate-bounce">👑</div>
-                <span className="text-4xl mb-1 drop-shadow-md">{top3[0].avatar}</span>
+                <span className="text-4xl mb-1 drop-shadow-md"><Avatar avatar={top3[0].avatar} px={48} /></span>
                 <span className="bg-amber-400 text-amber-950 font-black text-xs px-2.5 py-0.5 rounded-full border-2 border-white shadow-xs">
                   #1
                 </span>
@@ -209,7 +220,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStude
           {top3[2] && (
             <div className="flex-1 flex flex-col items-center">
               <div className="relative mb-2 flex flex-col items-center">
-                <span className="text-3xl mb-1 drop-shadow-sm">{top3[2].avatar}</span>
+                <span className="text-3xl mb-1 drop-shadow-sm"><Avatar avatar={top3[2].avatar} px={40} /></span>
                 <span className="bg-amber-700 text-amber-100 font-black text-xs px-2 py-0.5 rounded-full border border-amber-600">
                   #3
                 </span>
@@ -272,7 +283,7 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStude
                   #{student.rank}
                 </span>
 
-                <div className="relative shrink-0 text-2xl">{student.avatar}</div>
+                <div className="relative shrink-0 text-2xl"><Avatar avatar={student.avatar} px={32} /></div>
 
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
