@@ -5,6 +5,7 @@ import {
   Award,
   Trophy,
   Target,
+  BarChart3,
 } from 'lucide-react';
 import {
   TabType,
@@ -37,6 +38,9 @@ import { SkipGradeModal } from './components/SkipGradeModal';
 import { WisdomModal } from './components/WisdomModal';
 import { sound } from './utils/audio';
 
+/** 既有四個分頁（types.TabType）＋學習成效儀表板（本檔私有，不動 types.ts） */
+type AppTab = TabType | 'dashboard';
+
 // 依需載入：起跑測驗、課程播放器、排行榜、日記都各自切成獨立 chunk，
 // 首屏只載入地圖主畫面（含 motion/ confetti 的模組延後載入）。
 const LessonPlayer = React.lazy(() =>
@@ -53,6 +57,9 @@ const Leaderboard = React.lazy(() =>
 );
 const SettingsModal = React.lazy(() =>
   import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal }))
+);
+const LearningDashboard = React.lazy(() =>
+  import('./components/LearningDashboard').then((m) => ({ default: m.LearningDashboard }))
 );
 
 const LS_KEY = 'levelvest-save-v1';
@@ -170,7 +177,7 @@ export default function App() {
   const [missed, setMissed] = useState<Record<string, number>>(saved?.missed ?? {});
   const [students, setStudents] = useState<LeaderboardStudent[]>(leaderboardStudents);
 
-  const [currentTab, setCurrentTab] = useState<TabType>('learn');
+  const [currentTab, setCurrentTab] = useState<AppTab>('learn');
   const [activeSection, setActiveSection] = useState<Section | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [isLessonOpen, setIsLessonOpen] = useState(false);
@@ -533,13 +540,14 @@ export default function App() {
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
         {/* Tabs */}
         <div className="pt-3 px-4 flex items-center justify-center">
-          <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black">
+          <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(
               [
                 ['learn', '學習地圖', MapPin, 'text-[#58CC02]'],
                 ['leaderboard', '社群聯賽', Trophy, 'text-amber-500'],
                 ['journal', '決策日記', BookMarked, 'text-emerald-600'],
                 ['badges', '成就勳章', Award, 'text-amber-500'],
+                ['dashboard', '學習儀表板', BarChart3, 'text-sky-500'],
               ] as const
             ).map(([tab, label, Icon, color]) => (
               <button
@@ -592,6 +600,14 @@ export default function App() {
               onAddDecision={handleLogDecision}
             />
           </Suspense>
+        )}
+
+        {currentTab === 'dashboard' && (
+          <div className="flex-1 flex flex-col">
+            <Suspense fallback={<ScreenFallback label="載入學習儀表板…" />}>
+              <LearningDashboard />
+            </Suspense>
+          </div>
         )}
 
         {currentTab === 'badges' && (
@@ -658,6 +674,7 @@ export default function App() {
               ['leaderboard', '社群聯賽', Trophy],
               ['journal', '決策日記', BookMarked],
               ['badges', '紀律勳章', Award],
+              ['dashboard', '儀表板', BarChart3],
             ] as const
           ).map(([tab, label, Icon]) => (
             <button
