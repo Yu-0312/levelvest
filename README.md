@@ -8,12 +8,13 @@
 順便練出寫決策日記的好紀律。🐮
 
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![CI](https://github.com/Yu-0312/levelvest-plus/actions/workflows/ci.yml/badge.svg)](https://github.com/Yu-0312/levelvest-plus/actions/workflows/ci.yml)
 [![Built with Google AI Studio](https://img.shields.io/badge/Built_in-Google_AI_Studio-8E75B2?logo=googleaistudio&logoColor=white)](https://ai.studio/apps/7783595c-84c6-4d57-ab9c-b10325139f56)
 
-[🌐 線上課程藍圖](https://yu-0312.github.io/levelvest/curriculum-blueprint.html) · [⏩🪄 跳關 & 跳級](#skip) · [🧪 本地執行](#local-run)
+[🕹️ 線上試玩](https://yu-0312.github.io/levelvest-plus/) · [🌐 線上課程藍圖](https://yu-0312.github.io/levelvest-plus/curriculum-blueprint.html) · [⏩🪄 跳關 & 跳級](#skip) · [🧪 本地執行](#local-run)
 
 </div>
 
@@ -87,7 +88,7 @@ LevelVest 是一款專為 **Gen Z 與投資新手**打造的遊戲化學習 App�
 | 🔬 S9 | **進階研究館** | 怎麼做出自己的研究？（除權息、籌碼、估值） | 13 |
 | 🎓 S10 | **大師試煉** | 我準備好用真錢了嗎？（90 天模擬盤、投資計畫書） | 7 |
 
-📖 完整課程設計藍圖（10 章 / 38 單元 / 10 種題型 / 遊戲機制對照）→ [線上閱讀](https://yu-0312.github.io/levelvest/curriculum-blueprint.html) · [原始檔](public/curriculum-blueprint.html)
+📖 完整課程設計藍圖（10 章 / 38 單元 / 10 種題型 / 遊戲機制對照）→ [線上閱讀](https://yu-0312.github.io/levelvest-plus/curriculum-blueprint.html) · [原始檔](public/curriculum-blueprint.html)
 
 <br />
 
@@ -120,9 +121,9 @@ flowchart TD
 **需求**：Node.js 18+
 
 ```bash
-git clone https://github.com/Yu-0312/levelvest.git
-cd levelvest
-npm install          # 若 peer dependency 衝突，改用：npm install --legacy-peer-deps
+git clone https://github.com/Yu-0312/levelvest-plus.git
+cd levelvest-plus
+npm install          # 直接安裝即可（依賴已清理，無需 --legacy-peer-deps）
 npm run dev          # 開發伺服器 → http://localhost:3000
 ```
 
@@ -132,15 +133,33 @@ npm run dev          # 開發伺服器 → http://localhost:3000
 npm run build        # 生產建置 → dist/
 npm run preview      # 預覽建置結果
 npm run lint         # TypeScript 型別檢查（tsc --noEmit）
+npm run check        # 型別檢查 + 建置一次跑完（與 CI 相同流程）
 ```
 
 > 💡 學習進度存在瀏覽器 localStorage（`levelvest-save-v1`）。要重新開始時，點右上角**齒輪 ⚙️ →「重置學習進度」**再點一次確認即可；進階做法是在開發者工具執行 `localStorage.removeItem('levelvest-save-v1')` 後重新整理。
+> 每日任務會在跨日後自動歸零；存檔欄位缺漏或版本變更時會以預設值兜底，不會因此白屏。
 
 <br />
 
 ## ☁️ 部署
 
-本專案最初在 [Google AI Studio](https://ai.studio/apps/7783595c-84c6-4d57-ab9c-b10325139f56) 建立。可回到 AI Studio 的 Deploy 功能，或把 `dist/` 部署到任何靜態主機（Vercel / Netlify / Cloudflare Pages）。
+本專案最初在 [Google AI Studio](https://ai.studio/apps/7783595c-84c6-4d57-ab9c-b10325139f56) 建立。
+
+- **GitHub Pages（本 repo）**：push 到 `main` 後由 GitHub Actions 自動型別檢查 → 建置 → 部署，成品在 [yu-0312.github.io/levelvest-plus](https://yu-0312.github.io/levelvest-plus/)。
+- **其他主機**：把 `dist/` 丟到 Vercel / Netlify / Cloudflare Pages，或回 AI Studio 用 Deploy 功能。
+
+<br />
+
+## 🛠️ 工程實踐（本輪優化）
+
+| 面向 | 做了什麼 |
+| :--- | :--- |
+| **CI / CD** | 新增 `.github/workflows/ci.yml`：每次 push／PR 自動跑 `tsc --noEmit` + `vite build`；Pages 部署改用 `npm ci`（鎖檔安裝，可重複建置） |
+| **依賴清理** | 移除從未被引用的 `express`、`dotenv`、`esbuild`、`tsx`、`autoprefixer`、`@types/express`，並解決 peer dependency 衝突——`npm install` 不再需要 `--legacy-peer-deps` |
+| **效能** | 起跑測驗、關卡播放器、排行榜、決策日記、設定改為動態 chunk（React.lazy + Suspense），主 chunk 由 518 kB 降至 473 kB（gzip 166 → 155 kB），confetti／動畫模組延後載入 |
+| **穩定度** | 讀檔改為逐欄校正與兜底（舊檔／損毀檔不再白屏）；每日任務跨日自動歸零；補血彈窗、章節解鎖改用 effect 與純更新函式（消除 StrictMode 重複執行的副作用）；一次過關跨多級時改用迴圈結算升級 |
+| **無障礙** | 全域 `:focus-visible` 焦點框、`prefers-reduced-motion` 減少動態、彈窗補上 `role="dialog"`/`aria-modal`、圖示按鈕補 `aria-label`／`aria-pressed`、分頁加 `aria-current` |
+| **分享與安裝** | 補上 favicon、`og:image`／`twitter:card`（1200×630 分享圖）、theme-color 與 `site.webmanifest`（App icon／名稱／主題色） |
 
 <br />
 
@@ -162,7 +181,10 @@ npm run lint         # TypeScript 型別檢查（tsc --noEmit）
 ## 📁 專案結構
 
 ```
-levelvest/
+levelvest-plus/
+├── .github/workflows/
+│   ├── ci.yml                  # push / PR：tsc 型別檢查 + vite build
+│   └── deploy-pages.yml        # push main：建置並部署 GitHub Pages
 ├── src/
 │   ├── components/
 │   │   ├── SkillTree.tsx        # 學習地圖（跳關氣泡、跳級按鈕也在這）
@@ -179,10 +201,14 @@ levelvest/
 │   │   └── mockData.ts          # 排行榜 / 徽章 / 任務初始資料
 │   ├── utils/audio.ts           # Web Audio 音效合成
 │   ├── types.ts                 # TypeScript 型別定義
-│   ├── App.tsx                  # 主應用（4 個分頁 + 跳關/跳級邏輯）
+│   ├── App.tsx                  # 主應用（4 個分頁 + 存檔／跳關／跳級邏輯）
 │   └── index.css
 ├── docs/                        # README 截圖與 QA 素材
-├── public/curriculum-blueprint.html
+├── public/
+│   ├── curriculum-blueprint.html  # 課程設計藍圖（可直接線上閱讀）
+│   ├── favicon.svg、icon-192/512.png、apple-touch-icon.png
+│   ├── site.webmanifest           # PWA 安裝資訊
+│   └── og-cover.png               # 社群分享圖 1200×630
 └── vite.config.ts
 ```
 
@@ -194,10 +220,11 @@ levelvest/
 - [x] 跳關（章內跳過個別關卡）
 - [x] 跳級（直接解鎖目標章節）
 - [x] 愛心歸零 → 錯題複習回血（答對 1 題恢復 1 顆心，錯題優先出題）
-- [ ] 接上 Gemini API：AI 出題與個人化錯題解析（[#3](../../issues/3)）
-- [ ] AI 學習日報：每日個人化學習摘要與複習建議（[#4](../../issues/4)）
-- [ ] AI 新聞分享：投資新聞摘要、觀念連結與社群分享（[#5](../../issues/5)）
-- [ ] AI 新聞即時模擬交易練習：讀新聞 → 下單 → AI 複盤（[#6](../../issues/6)）
+- [x] CI（型別檢查＋建置）、依賴清理、code splitting、無障礙與分享 meta（見「工程實踐」）
+- [ ] 接上 Gemini API：AI 出題與個人化錯題解析（[原 repo #3](https://github.com/Yu-0312/levelvest/issues/3)）
+- [ ] AI 學習日報：每日個人化學習摘要與複習建議（[原 repo #4](https://github.com/Yu-0312/levelvest/issues/4)）
+- [ ] AI 新聞分享：投資新聞摘要、觀念連結與社群分享（[原 repo #5](https://github.com/Yu-0312/levelvest/issues/5)）
+- [ ] AI 新聞即時模擬交易練習：讀新聞 → 下單 → AI 複盤（[原 repo #6](https://github.com/Yu-0312/levelvest/issues/6)）
 - [ ] 真實排行榜後端（目前為班級 mock 資料）
 - [ ] 錯題本與弱點補強推薦
 - [ ] PWA 離線學習

@@ -64,6 +64,8 @@ export const Header: React.FC<HeaderProps> = ({
                 sound.playClick();
                 setShowStreakModal(!showStreakModal);
               }}
+              aria-expanded={showStreakModal}
+              aria-label={`連續學習 ${stats.streak} 天`}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-xl border-2 border-amber-200 bg-amber-50 hover:bg-amber-100/80 active:translate-y-0.5 text-amber-700 font-extrabold text-xs sm:text-sm transition-transform cursor-pointer"
               title="連續學習紀錄"
             >
@@ -75,6 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Gems Counter */}
             <div
               id="gems-display"
+              aria-label={`寶石 ${stats.gems} 顆`}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-xl border-2 border-sky-200 bg-sky-50 text-sky-700 font-extrabold text-xs sm:text-sm"
               title="投資寶石"
             >
@@ -89,6 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
                 sound.playClick();
                 onOpenHeartRefill();
               }}
+              aria-label={`生命值 ${stats.hearts} 之 ${stats.maxHearts}，點擊補血`}
               className={`flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-xl border-2 active:translate-y-0.5 font-extrabold text-xs sm:text-sm transition-transform cursor-pointer ${
                 stats.hearts <= 1
                   ? 'border-red-300 bg-red-50 text-red-600 animate-bounce'
@@ -109,6 +113,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => {
                 onToggleSound();
               }}
+              aria-pressed={stats.soundEnabled}
+              aria-label={stats.soundEnabled ? '關閉音效' : '開啟音效'}
               className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 active:scale-95 transition-transform"
               title={stats.soundEnabled ? '關閉音效' : '開啟音效'}
             >
@@ -125,6 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
                 sound.playClick();
                 onOpenSettings();
               }}
+              aria-label="設定與重置學習進度"
               className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 active:scale-95 transition-transform"
               title="設定 / 重置進度"
             >
@@ -156,6 +163,9 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Streak Info Popup */}
       {showStreakModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="連續學習紀錄"
           className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setShowStreakModal(false)}
         >

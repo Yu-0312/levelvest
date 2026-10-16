@@ -37,6 +37,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="設定"
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
       onClick={onClose}
     >
@@ -49,6 +52,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             sound.playClick();
             onClose();
           }}
+          aria-label="關閉設定"
           className="absolute right-4 top-4 p-1 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100"
         >
           <X className="w-5 h-5" />

@@ -292,6 +292,9 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
       {/* Manual Add Decision Modal */}
       {isAddModalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="新增決策紀錄"
           className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
           onClick={() => setIsAddModalOpen(false)}
         >

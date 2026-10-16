@@ -127,6 +127,9 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`關卡課程：${lesson.title}`}
         className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
       >
         <motion.div

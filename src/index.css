@@ -49,3 +49,22 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+/* ── 無障礙：鍵盤操作可見的焦點框 ── */
+:focus-visible {
+  outline: 3px solid #58cc02;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ── 無障礙：尊重使用者的「減少動態效果」系統設定 ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

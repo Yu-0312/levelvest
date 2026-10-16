@@ -27,6 +27,9 @@ export const SkipGradeModal: React.FC<SkipGradeModalProps> = ({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="跳級確認"
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
       onClick={onClose}
     >

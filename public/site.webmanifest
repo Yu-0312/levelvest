@@ -1,0 +1,16 @@
+{
+  "name": "LevelVest 投資理財冒險",
+  "short_name": "LevelVest",
+  "description": "投資理財的 Duolingo——遊戲化台股投資學習 App",
+  "lang": "zh-TW",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F7F7F7",
+  "theme_color": "#58CC02",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -37,6 +37,9 @@ export const WisdomModal: React.FC<WisdomModalProps> = ({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="蒙格心法補血"
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
       onClick={onClose}
     >

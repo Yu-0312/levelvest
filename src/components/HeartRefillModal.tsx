@@ -30,6 +30,9 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="補血彈窗"
       className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
       onClick={onClose}
     >
