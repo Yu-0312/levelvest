@@ -13,6 +13,7 @@ import {
   Sparkles,
   Inbox,
 } from 'lucide-react';
+import { localDateKey } from '../utils/date';
 import { curriculum, findLesson } from '../data/curriculum';
 import { sound } from '../utils/audio';
 import type { BehavioralBadge, DailyState, TradeDecision, UserStats } from '../types';
@@ -75,15 +76,22 @@ function readSnapshots(): DaySnapshot[] {
   }
 }
 
-/** 同一天只記錄一次；回傳新的快照陣列（不負責寫入） */
+/** 同一天以較高達成率為準（同日多次開啟會覆寫成最新進度）；回傳新的快照陣列（不負責寫入） */
 function withToday(prev: DaySnapshot[], date: string, done: number, target: number): DaySnapshot[] {
-  if (prev.some((s) => s.date === date)) return prev;
+  const idx = prev.findIndex((s) => s.date === date);
+  if (idx >= 0) {
+    const existing = prev[idx];
+    if (existing.done >= done && existing.target === target) return prev;
+    const next = [...prev];
+    next[idx] = { date, done: Math.max(done, existing.done), target };
+    return next;
+  }
   const next = [...prev, { date, done, target }].sort((a, b) => a.date.localeCompare(b.date));
   return next.slice(-60);
 }
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDateKey();
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -287,7 +295,7 @@ export const LearningDashboard: React.FC = () => {
     const done = daily.tasks.reduce((s, t) => s + Math.max(0, Math.min(Number(t.done) || 0, t.target)), 0);
     const target = daily.tasks.reduce((s, t) => s + (Number(t.target) || 0), 0);
     const next = withToday(readSnapshots(), todayKey(), done, target);
-    if (next.length !== snapshots.length || next[next.length - 1]?.date !== snapshots[snapshots.length - 1]?.date) {
+    if (JSON.stringify(next) !== JSON.stringify(snapshots)) {
       try {
         window.localStorage.setItem(DASH_KEY, JSON.stringify(next));
       } catch {

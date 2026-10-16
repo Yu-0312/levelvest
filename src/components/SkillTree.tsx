@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Check,
@@ -125,6 +125,14 @@ export const SkillTree: React.FC<SkillTreeProps> = ({
   onJumpToSection,
 }) => {
   const [lockedTip, setLockedTip] = useState<string | null>(null);
+  /** 鎖定提示的自動關閉 timer：unmount 時清理，避免 setState on unmounted */
+  const lockedTipTimer = useRef<number | undefined>(undefined);
+  useEffect(
+    () => () => {
+      if (lockedTipTimer.current) window.clearTimeout(lockedTipTimer.current);
+    },
+    []
+  );
 
   const getOffset = (index: number) => {
     const pattern = ['translate-x-0', '-translate-x-8', 'translate-x-0', 'translate-x-8'];
@@ -250,14 +258,14 @@ export const SkillTree: React.FC<SkillTreeProps> = ({
                 aria-hidden
                 className="absolute left-1/2 -translate-x-1/2 top-3 bottom-3 border-l-4 border-dotted border-slate-200 pointer-events-none"
               />
-              {section.lessons.map((lesson) => {
+              {(() => {
+                const firstIncomplete = section.lessons.find((l) => !progress[l.id]?.completed);
+                return section.lessons.map((lesson) => {
                 const idx = globalIdx++;
                 const p = progress[lesson.id];
                 const completed = !!p?.completed;
                 const skipped = !!p?.skipped;
                 // active = first non-completed lesson in an unlocked section
-                const sectionLessons = section.lessons;
-                const firstIncomplete = sectionLessons.find((l) => !progress[l.id]?.completed);
                 const active = unlocked && !completed && firstIncomplete?.id === lesson.id;
                 const locked = !unlocked || (!completed && !active);
 
@@ -274,10 +282,7 @@ export const SkillTree: React.FC<SkillTreeProps> = ({
                     className={`relative flex flex-col items-center ${getOffset(idx)}`}
                   >
                     {active && (
-                      <motion.div
-                        initial={{ y: 5, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ repeat: Infinity, repeatType: 'reverse', duration: 1.5 }}
+                      <div
                         className="absolute -top-11 z-20 bg-white border-2 border-slate-200 px-3 py-1.5 rounded-xl shadow-md cursor-pointer whitespace-nowrap animate-bob"
                         onClick={() => {
                           sound.playClick();
@@ -289,7 +294,7 @@ export const SkillTree: React.FC<SkillTreeProps> = ({
                           <span>開始：{lesson.title}</span>
                         </div>
                         <div className="absolute left-1/2 -bottom-2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[7px] border-t-white" />
-                      </motion.div>
+                      </div>
                     )}
 
                     <div className="relative group">
@@ -302,7 +307,8 @@ export const SkillTree: React.FC<SkillTreeProps> = ({
                           if (locked) {
                             sound.playError();
                             setLockedTip(lesson.id);
-                            setTimeout(() => setLockedTip(null), 4200);
+                            if (lockedTipTimer.current) window.clearTimeout(lockedTipTimer.current);
+                            lockedTipTimer.current = window.setTimeout(() => setLockedTip(null), 4200);
                           } else {
                             sound.playClick();
                             onSelectLesson(section, lesson);
@@ -421,7 +427,8 @@ export const SkillTree: React.FC<SkillTreeProps> = ({
                     )}
                   </div>
                 );
-              })}
+              });
+              })()}
 
               {/* 單元吉祥物：每個大單元一隻，貼在地圖旁邊，隨捲動停留在該單元範圍內 */}
               <UnitMascot

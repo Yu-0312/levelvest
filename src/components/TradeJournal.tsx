@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { TradeDecision, BehavioralBadge } from '../types';
+import { localDateKey } from '../utils/date';
 import { sound } from '../utils/audio';
 
 interface TradeJournalProps {
@@ -39,12 +40,16 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
   const [disciplineFollowed, setDisciplineFollowed] = useState(true);
   const [emotions, setEmotions] = useState<TradeDecision['emotions']>('冷靜理性');
 
-  // Metrics calculation
+  // Metrics calculation（全部由真實日記資料計算，不再寫死假數字）
   const totalDecisions = decisions.length;
   const disciplinedCount = decisions.filter((d) => d.disciplineFollowed).length;
-  const disciplineRate = totalDecisions > 0 ? Math.round((disciplinedCount / totalDecisions) * 100) : 100;
-  const decisionWinRate = 72; // Gamified simulated process win-rate
-  const avgHoldingDays = 14.2; // Average holding period
+  const disciplineRate = totalDecisions > 0 ? Math.round((disciplinedCount / totalDecisions) * 100) : 0;
+  // 決策勝率＝已回饋（非「待觀察」）的決策中「符合預期」的比例
+  const settled = decisions.filter((d) => d.outcome !== '待觀察');
+  const winCount = settled.filter((d) => d.outcome === '符合預期').length;
+  const decisionWinRate = settled.length > 0 ? Math.round((winCount / settled.length) * 100) : null;
+  // 鋼鐵紀律勳章（badge-1）實際進度
+  const disciplineBadge = badges.find((b) => b.id === 'badge-1');
 
   const filteredDecisions = decisions.filter((d) => {
     if (filter === 'disciplined') return d.disciplineFollowed;
@@ -60,7 +65,7 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
       id: `trade-${Date.now()}`,
       ticker,
       tickerName,
-      date: new Date().toISOString().split('T')[0],
+      date: localDateKey(),
       action,
       strategyTag,
       rationale,
@@ -92,39 +97,51 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
 
       {/* KPI Stats Grid: 決策勝率, 平均抱單天數, 鋼鐵紀律勳章 */}
       <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
-        {/* Metric 1: 決策勝率 */}
+        {/* Metric 1: 決策勝率（真實計算；尚無已結案決策時顯示 —） */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border-2 border-slate-200 text-center shadow-xs">
           <div className="w-9 h-9 mx-auto mb-2 bg-emerald-100 rounded-xl flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-[#58CC02]" />
           </div>
-          <p className="text-xl sm:text-2xl font-black text-slate-800">{decisionWinRate}%</p>
+          <p className="text-xl sm:text-2xl font-black text-slate-800">
+            {decisionWinRate === null ? '—' : `${decisionWinRate}%`}
+          </p>
           <p className="text-[11px] font-bold text-slate-500 mt-0.5">決策勝率</p>
           <span className="inline-block mt-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-            優於 85% 同學
+            {settled.length === 0 ? '完成日記後開始追蹤' : `已結案 ${settled.length} 筆決策`}
           </span>
         </div>
 
-        {/* Metric 2: 平均抱單天數 */}
+        {/* Metric 2: 紀律遵守率（真實計算） */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border-2 border-slate-200 text-center shadow-xs">
           <div className="w-9 h-9 mx-auto mb-2 bg-blue-100 rounded-xl flex items-center justify-center">
             <Calendar className="w-5 h-5 text-blue-600" />
           </div>
-          <p className="text-xl sm:text-2xl font-black text-slate-800">{avgHoldingDays} <span className="text-xs font-bold text-slate-500">天</span></p>
-          <p className="text-[11px] font-bold text-slate-500 mt-0.5">平均抱單天數</p>
+          <p className="text-xl sm:text-2xl font-black text-slate-800">
+            {totalDecisions > 0 ? `${disciplineRate}%` : '—'}
+          </p>
+          <p className="text-[11px] font-bold text-slate-500 mt-0.5">紀律遵守率</p>
           <span className="inline-block mt-1 text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
-            波段耐力佳
+            {totalDecisions === 0 ? '寫下第一則決策開始' : `${disciplinedCount} / ${totalDecisions} 次照計畫執行`}
           </span>
         </div>
 
-        {/* Metric 3: 鋼鐵紀律勳章 */}
-        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border-2 border-amber-200 bg-amber-50/40 text-center shadow-xs">
+        {/* Metric 3: 鋼鐵紀律勳章（讀取真實 badge 進度） */}
+        <div className={`rounded-2xl p-3.5 sm:p-4 border-2 text-center shadow-xs ${disciplineBadge?.unlocked ? 'border-amber-200 bg-amber-50/40' : 'border-slate-200 bg-white opacity-70'}`}>
           <div className="w-9 h-9 mx-auto mb-2 bg-amber-100 rounded-xl flex items-center justify-center">
             <Shield className="w-5 h-5 text-amber-600 fill-amber-500" />
           </div>
           <p className="text-sm sm:text-base font-black text-amber-900 mt-1">鋼鐵紀律勳章</p>
-          <p className="text-[11px] font-bold text-amber-700 mt-0.5">3/3 遵守停損</p>
-          <span className="inline-block mt-1 text-[10px] font-extrabold text-amber-800 bg-amber-200/80 px-2 py-0.5 rounded-full">
-            已解鎖榮譽 🛡️
+          <p className="text-[11px] font-bold text-amber-700 mt-0.5">
+            {disciplineBadge ? `${disciplineBadge.progress}/${disciplineBadge.maxProgress} 遵守停損` : '0/3 遵守停損'}
+          </p>
+          <span
+            className={`inline-block mt-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+              disciplineBadge?.unlocked
+                ? 'text-amber-800 bg-amber-200/80'
+                : 'text-slate-500 bg-slate-100'
+            }`}
+          >
+            {disciplineBadge?.unlocked ? '已解鎖榮譽 🛡️' : '尚未解鎖'}
           </span>
         </div>
       </div>

@@ -27,7 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
     <>
       <header
         id="app-header"
-        className="sticky top-0 z-30 w-full bg-white/95 backdrop-blur-md border-b-2 border-slate-200 px-3 py-2.5 sm:px-6 transition-all shadow-sm"
+        className="sticky top-0 z-30 w-full bg-white border-b-2 border-slate-200 px-3 py-2.5 sm:px-6 transition-all shadow-sm"
       >
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
           {/* Left: Brand & User Level */}

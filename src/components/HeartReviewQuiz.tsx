@@ -22,6 +22,8 @@ interface HeartReviewQuizProps {
   onClose: () => void;
   /** 答對 1 題 → 恢復 1 顆心（App 端封頂 maxHearts） */
   onEarnHeart: () => void;
+  /** 複習中答對 → 該題錯題數 -1（弱點消除） */
+  onCorrect: (key: string) => void;
   /** 複習中答錯 → 加強該題的錯題權重 */
   onWrong: (key: string) => void;
   /** 一輪複習結束：回報答對題數，用來發放小額 XP */
@@ -61,6 +63,7 @@ export const HeartReviewQuiz: React.FC<HeartReviewQuizProps> = ({
   pool,
   onClose,
   onEarnHeart,
+  onCorrect,
   onWrong,
   onComplete,
   onOpenRefill,
@@ -111,6 +114,7 @@ export const HeartReviewQuiz: React.FC<HeartReviewQuizProps> = ({
     if (selected === current.question.answer) {
       sound.playSuccess();
       setCorrectCount((c) => c + 1);
+      onCorrect(current.key);
       if (hearts < maxHearts) {
         onEarnHeart();
         setEarnedThisQuestion(true);
@@ -167,6 +171,9 @@ export const HeartReviewQuiz: React.FC<HeartReviewQuizProps> = ({
   return (
     <AnimatePresence>
       <motion.div
+        role="dialog"
+        aria-modal="true"
+        aria-label="錯題複習回血"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}

@@ -104,7 +104,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <div>
               <p className="text-xs font-black text-rose-800">重置學習進度</p>
               <p className="text-[11px] text-rose-600 leading-relaxed mt-0.5">
-                清除此瀏覽器的存檔（等級、XP、關卡進度、決策日記），回到起跑前測驗重新開始。
+                將清除本機所有 LevelVest 資料（等級、XP、關卡進度、決策日記，以及模擬投組、儀表板快照、時事挑戰成績、AI 導師對話），回到起跑前測驗重新開始。
                 <span className="font-black">此操作無法復原。</span>
               </p>
             </div>

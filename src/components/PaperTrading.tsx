@@ -328,7 +328,14 @@ function PriceChart({
 
 /* ── 主元件 ── */
 
-export const PaperTrading: React.FC = () => {
+interface PaperTradingProps {
+  /** 每完成一筆下單回報 App（發放 XP＋推進每日任務）；不傳也可獨立運作 */
+  onTrade?: (info: { xp: number }) => void;
+}
+
+const TRADE_XP = 10;
+
+export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
   const [state, setState] = useState<PaperState>(() => loadPaperState());
   const [selected, setSelected] = useState<string>(SYMBOLS[0].code);
   const [stopAlerts, setStopAlerts] = useState<StopAlert[]>([]);
@@ -501,19 +508,24 @@ export const PaperTrading: React.FC = () => {
     setFormError('');
     setStopAlerts([]);
     sound.playSuccess();
+    // 串進遊戲經濟：XP＋每日任務（App 端處理；未接線時靜默忽略）
+    onTrade?.({ xp: TRADE_XP });
   };
 
   /* ── 停損價設定 ── */
   const handleStopChange = (code: string, raw: string) => {
     const current = prices[code] ?? 0;
+    // 未持有該標的時不建立殘缺持倉（會產生 NaN 損益）
+    if (!state.positions[code]) return;
     if (raw === '') {
-      setState((prev) => ({
-        ...prev,
-        positions: {
-          ...prev.positions,
-          [code]: { ...prev.positions[code], stopLoss: null },
-        },
-      }));
+      setState((prev) => {
+        const pos = prev.positions[code];
+        if (!pos) return prev;
+        return {
+          ...prev,
+          positions: { ...prev.positions, [code]: { ...pos, stopLoss: null } },
+        };
+      });
       setStopErr((e) => ({ ...e, [code]: '' }));
       return;
     }
@@ -529,13 +541,14 @@ export const PaperTrading: React.FC = () => {
       return;
     }
     setStopErr((e) => ({ ...e, [code]: '' }));
-    setState((prev) => ({
-      ...prev,
-      positions: {
-        ...prev.positions,
-        [code]: { ...prev.positions[code], stopLoss: round2(v) },
-      },
-    }));
+    setState((prev) => {
+      const pos = prev.positions[code];
+      if (!pos) return prev;
+      return {
+        ...prev,
+        positions: { ...prev.positions, [code]: { ...pos, stopLoss: round2(v) } },
+      };
+    });
   };
 
   const handleReset = () => {
@@ -681,6 +694,7 @@ export const PaperTrading: React.FC = () => {
                 onClick={() => {
                   sound.playClick();
                   setSelected(s.code);
+                  setOrderCode(s.code); // 圖上選的標的與下單表單連動，避免看圖買別檔
                 }}
                 className={`shrink-0 rounded-2xl border-2 px-2.5 py-1.5 text-left transition-all cursor-pointer ${
                   active

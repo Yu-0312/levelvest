@@ -33,14 +33,13 @@ import { curriculum } from './data/curriculum';
 import { Header } from './components/Header';
 import { SkillTree } from './components/SkillTree';
 import { DailyTasks } from './components/DailyTasks';
-import { WeeklyNewsChallenge } from './components/WeeklyNewsChallenge';
 import { HeartRefillModal } from './components/HeartRefillModal';
 import { HeartReviewQuiz } from './components/HeartReviewQuiz';
 import { SkipGradeModal } from './components/SkipGradeModal';
 import { WisdomModal } from './components/WisdomModal';
-import { AITutor, type TutorContext } from './components/AITutor';
-import { ShareCard } from './components/ShareCard';
+import type { TutorContext } from './components/AITutor';
 import { SideDrawer } from './components/SideDrawer';
+import { localDateKey } from './utils/date';
 import { sound } from './utils/audio';
 
 /** 分頁型別：共用 TabType 再加上模擬投組與學習儀表板（不改動共用 types.ts） */
@@ -69,8 +68,25 @@ const PaperTrading = React.lazy(() =>
 const LearningDashboard = React.lazy(() =>
   import('./components/LearningDashboard').then((m) => ({ default: m.LearningDashboard }))
 );
+// AI 導師／分享卡／時事挑戰只在特定情境用到（答錯、成就頁、抽屜），延後載入縮小主 bundle
+const AITutor = React.lazy(() =>
+  import('./components/AITutor').then((m) => ({ default: m.AITutor }))
+);
+const ShareCardLazy = React.lazy(() =>
+  import('./components/ShareCard').then((m) => ({ default: m.ShareCard }))
+);
+const WeeklyNewsChallenge = React.lazy(() =>
+  import('./components/WeeklyNewsChallenge').then((m) => ({ default: m.WeeklyNewsChallenge }))
+);
 
 const LS_KEY = 'levelvest-save-v1';
+/** 其他功能的專屬存檔 key：重置學習進度時必須一併清除，避免資料殘留 */
+const EXTRA_LS_KEYS = [
+  'levelvest-paper-trading-v1',
+  'levelvest-dashboard-v1',
+  'levelvest-weekly-news-v1',
+  'levelvest-ai-tutor-v1',
+] as const;
 
 interface SaveState {
   onboarded: boolean;
@@ -86,7 +102,7 @@ interface SaveState {
 }
 
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDateKey();
 }
 
 /** 每日任務：跨日自動歸零；同一天則沿用進度 */
@@ -224,25 +240,57 @@ export default function App() {
     sound.enabled = stats.soundEnabled;
   }, [stats.soundEnabled]);
 
-  // 監聽捲動，判斷「當前關卡」是否還在畫面內
+  // 三項每日任務全清 → 連勝 +1（每天只記一次），並推進「紀律日連勝」勳章
+  useEffect(() => {
+    const allDone = daily.tasks.length > 0 && daily.tasks.every((t) => t.done >= t.target);
+    if (!allDone) return;
+    const todayKey = today();
+    if (stats.lastStreakDate === todayKey) return;
+    const newStreak = stats.streak + 1;
+    setStats((prev) => ({ ...prev, streak: newStreak, lastStreakDate: todayKey }));
+    setBadges((prev) =>
+      prev.map((b) => {
+        if (b.id !== 'badge-8') return b;
+        const progressCount = Math.min(b.maxProgress, newStreak);
+        return { ...b, progress: progressCount, unlocked: progressCount >= b.maxProgress };
+      })
+    );
+  }, [daily.tasks, stats.lastStreakDate, stats.streak]);
+
+  // 監聽捲動，判斷「當前關卡」是否還在畫面內（rAF 節流＋值未變不 setState，避免整頁重渲）
   useEffect(() => {
     if (currentTab !== 'learn') {
       setShowContinue(false);
       return;
     }
+    let rafId = 0;
+    let lastVisible: boolean | null = null;
     const onScroll = () => {
-      const el = document.getElementById('active-lesson-node');
-      if (!el) {
-        setShowContinue(false);
-        return;
-      }
-      const r = el.getBoundingClientRect();
-      const visible = r.top < window.innerHeight * 0.75 && r.bottom > window.innerHeight * 0.35;
-      setShowContinue(!visible);
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        const el = document.getElementById('active-lesson-node');
+        if (!el) {
+          if (lastVisible !== false) {
+            lastVisible = false;
+            setShowContinue(false);
+          }
+          return;
+        }
+        const r = el.getBoundingClientRect();
+        const visible = r.top < window.innerHeight * 0.75 && r.bottom > window.innerHeight * 0.35;
+        if (visible !== lastVisible) {
+          lastVisible = visible;
+          setShowContinue(!visible);
+        }
+      });
     };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, [currentTab, progress, unlockedSections]);
 
   const handleOnboard = (p: OnboardingProfile) => {
@@ -290,10 +338,11 @@ export default function App() {
     }));
   };
 
-  /** 重置學習進度：清除此瀏覽器存檔，回到起跑前測驗（設定彈窗用） */
+  /** 重置學習進度：清除此瀏覽器存檔（含模擬投組、儀表板、時事挑戰、AI 導師），回到起跑前測驗 */
   const handleResetProgress = () => {
     try {
       localStorage.removeItem(LS_KEY);
+      for (const key of EXTRA_LS_KEYS) localStorage.removeItem(key);
     } catch {
       /* ignore */
     }
@@ -331,6 +380,7 @@ export default function App() {
   };
 
   const handleCompleteLesson = (lessonId: string, stars: number, xp: number, gems: number) => {
+    const alreadyCompleted = progress[lessonId]?.completed === true;
     const updated: LessonProgress = {
       ...progress,
       [lessonId]: {
@@ -342,8 +392,12 @@ export default function App() {
     // 解鎖下一章的檢查移到更新函式外（在 updater 內呼叫 setState 會被 StrictMode 重複執行）
     if (activeSection) maybeUnlockNext(activeSection.id, updated);
 
+    // 防刷：重玩已通關的關卡不重複發獎勵（XP／寶石／每日任務），只給象徵性複習 XP
+    const rewardXp = alreadyCompleted ? 5 : xp;
+    const rewardGems = alreadyCompleted ? 0 : gems;
+
     setStats((prev) => {
-      let xpPool = prev.xp + xp;
+      let xpPool = prev.xp + rewardXp;
       let level = prev.level;
       let nextLevelXp = prev.nextLevelXp;
       // 一次獎勵可能跨多級（例如一次拿滿星通過 BOSS），改用迴圈結算
@@ -363,22 +417,41 @@ export default function App() {
         level,
         nextLevelXp,
         title: newTitle,
-        gems: prev.gems + gems,
+        gems: prev.gems + rewardGems,
       };
     });
 
-    // Daily tasks
-    setDaily((prev) => ({
-      ...prev,
-      tasks: prev.tasks.map((t) => {
-        if (t.id === 'd1') return { ...t, done: Math.min(t.target, t.done + 1) };
-        return t;
-      }),
-    }));
+    // Daily tasks（只有首次通關才算進度）
+    if (!alreadyCompleted) {
+      setDaily((prev) => ({
+        ...prev,
+        tasks: prev.tasks.map((t) => {
+          if (t.id === 'd1') return { ...t, done: Math.min(t.target, t.done + 1) };
+          return t;
+        }),
+      }));
+    }
 
     // Leaderboard sync
     setStudents((prev) =>
-      prev.map((s) => (s.isCurrentUser ? { ...s, weeklyXp: s.weeklyXp + xp } : s))
+      prev.map((s) => (s.isCurrentUser ? { ...s, weeklyXp: s.weeklyXp + rewardXp } : s))
+    );
+
+    // 勳章進度：
+    // badge-5 百發百中學者＝連續滿分（3 星）通關，失手一次歸零
+    // badge-6 心魔獵人＝通過 S6 BOSS
+    const isS6Boss = activeSection?.id === 's6' && !!activeSection.lessons.find((l) => l.id === lessonId)?.isBoss;
+    setBadges((prev) =>
+      prev.map((b) => {
+        if (b.id === 'badge-5') {
+          const nextProgress = stars >= 3 ? Math.min(b.maxProgress, b.progress + 1) : 0;
+          return { ...b, progress: nextProgress, unlocked: nextProgress >= b.maxProgress || b.unlocked };
+        }
+        if (b.id === 'badge-6' && isS6Boss) {
+          return { ...b, progress: 1, unlocked: true };
+        }
+        return b;
+      })
     );
   };
 
@@ -405,6 +478,18 @@ export default function App() {
       ...prev,
       hearts: Math.min(prev.maxHearts, prev.hearts + 1),
     }));
+  };
+
+  /** 複習答對：該題錯題數 -1（弱點逐漸消除，清零即移出錯題本） */
+  const handleReviewCorrect = (questionKey: string) => {
+    setMissed((prev) => {
+      const nextCount = (prev[questionKey] ?? 0) - 1;
+      if (nextCount <= 0) {
+        const { [questionKey]: _removed, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [questionKey]: nextCount };
+    });
   };
 
   /** 統一的 XP 給與（含升級判定與排行榜同步） */
@@ -450,6 +535,17 @@ export default function App() {
       sound.playCoin();
       setStats((prev) => ({ ...prev, gems: prev.gems + gems }));
     }
+  };
+
+  /** 模擬投組完成一筆下單：串進遊戲經濟（XP＋每日任務「模擬下單」） */
+  const handlePaperTrade = (info: { xp: number }) => {
+    if (info.xp > 0) grantXp(info.xp);
+    setDaily((prev) => ({
+      ...prev,
+      tasks: prev.tasks.map((t) =>
+        t.id === 'd4' ? { ...t, done: Math.min(t.target, t.done + 1) } : t
+      ),
+    }));
   };
 
   const handleLogDecision = (decision: TradeDecision) => {
@@ -560,8 +656,8 @@ export default function App() {
       />
 
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
-        {/* Tabs */}
-        <div className="pt-3 px-4 flex items-center justify-center">
+        {/* Tabs（<md 由底部導覽列接手，避免兩套導覽並存） */}
+        <div className="hidden md:flex pt-3 px-4 items-center justify-center">
           <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(
               [
@@ -611,7 +707,7 @@ export default function App() {
 
         {currentTab === 'leaderboard' && (
           <Suspense fallback={<ScreenFallback label="載入排行榜…" />}>
-            <Leaderboard students={students} userXp={stats.xp} />
+            <Leaderboard students={students} />
           </Suspense>
         )}
 
@@ -627,7 +723,7 @@ export default function App() {
 
         {currentTab === 'paper' && (
           <Suspense fallback={<ScreenFallback label="載入模擬投組…" />}>
-            <PaperTrading />
+            <PaperTrading onTrade={handlePaperTrade} />
           </Suspense>
         )}
 
@@ -689,7 +785,9 @@ export default function App() {
             </div>
 
             {/* 學習證明分享卡：把目前進度畫成 1200×630 的可下載分享圖 */}
-            <ShareCard stats={stats} progress={progress} badges={badges} />
+            <Suspense fallback={null}>
+              <ShareCardLazy stats={stats} progress={progress} badges={badges} />
+            </Suspense>
           </div>
         )}
       </main>
@@ -706,7 +804,7 @@ export default function App() {
               ['leaderboard', '社群聯賽', Trophy],
               ['journal', '決策日記', BookMarked],
               ['paper', '模擬投組', CandlestickChart],
-              ['badges', '紀律勳章', Award],
+              ['badges', '成就勳章', Award],
               ['dashboard', '儀表板', BarChart3],
             ] as const
           ).map(([tab, label, Icon]) => (
@@ -769,11 +867,13 @@ export default function App() {
       )}
 
       {/* AI 對話導師：由課程答錯畫面帶入題目情境 */}
-      <AITutor
-        isOpen={tutorContext !== null}
-        context={tutorContext}
-        onClose={() => setTutorContext(null)}
-      />
+      <Suspense fallback={null}>
+        <AITutor
+          isOpen={tutorContext !== null}
+          context={tutorContext}
+          onClose={() => setTutorContext(null)}
+        />
+      </Suspense>
 
       <SkipGradeModal
         targetSection={jumpTarget}
@@ -808,6 +908,7 @@ export default function App() {
         pool={reviewPool}
         onClose={() => setIsReviewOpen(false)}
         onEarnHeart={handleEarnHeart}
+        onCorrect={handleReviewCorrect}
         onWrong={handleReviewWrong}
         onComplete={handleReviewComplete}
         onOpenRefill={() => {
@@ -837,10 +938,12 @@ export default function App() {
         onClose={() => setIsWeeklyDrawerOpen(false)}
         title="每週時事挑戰"
       >
-        <WeeklyNewsChallenge
-          risk={profile?.risk ?? null}
-          onReward={handleWeeklyNewsReward}
-        />
+        <Suspense fallback={null}>
+          <WeeklyNewsChallenge
+            risk={profile?.risk ?? null}
+            onReward={handleWeeklyNewsReward}
+          />
+        </Suspense>
       </SideDrawer>
     </div>
   );

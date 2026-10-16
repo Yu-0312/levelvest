@@ -114,7 +114,7 @@ function buildSystemInstruction(c: TutorContext): string {
   ].join('\n');
 }
 
-/** 呼叫 Gemini；失敗一律丟錯，由呼叫端降級 */
+/** 呼叫 Gemini（含 25 秒逾時保護）；失敗一律丟錯，由呼叫端降級 */
 async function askGemini(
   context: TutorContext,
   history: ChatMessage[]
@@ -127,14 +127,24 @@ async function askGemini(
     role: m.role === 'model' ? ('model' as const) : ('user' as const),
     parts: [{ text: m.text }],
   }));
-  const res = await ai.models.generateContent({
+  const request = ai.models.generateContent({
     model: MODEL,
     contents,
     config: { systemInstruction: buildSystemInstruction(context) },
   });
-  const text = res.text?.trim();
-  if (!text) throw new Error('模型回覆為空');
-  return text;
+  // 網路卡住時不能讓「老師思考中…」永遠轉圈
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error('請求逾時（25 秒）')), 25_000);
+  });
+  try {
+    const res = await Promise.race([request, timeout]);
+    const text = res.text?.trim();
+    if (!text) throw new Error('模型回覆為空');
+    return text;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 /** 離線時的固定解析回覆 */
@@ -178,8 +188,13 @@ export const AITutor: React.FC<AITutorProps> = ({ isOpen, context, onClose }) =>
     );
   }, [isOpen, key]);
 
-  // 對話紀錄持久化（專屬 localStorage key）
+  // 對話紀錄持久化（專屬 localStorage key）；跳過掛載時的首次執行，避免沒用過就寫入
+  const mountedRef = useRef(false);
   useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
     saveSession(session);
   }, [session]);
 

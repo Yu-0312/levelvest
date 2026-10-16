@@ -8,6 +8,26 @@ export default defineConfig(() => {
     // GitHub Pages serves the app under /levelvest/ — keep asset URLs relative.
     base: './',
     plugins: [react(), tailwindcss()],
+    build: {
+      // 把 framework 拆成獨立 chunk：主 bundle 降到 500KB 警告門檻下，
+      // 且 react/motion 跨版本更新時不需重下這兩塊（快取友善）
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              {
+                name: 'vendor-react',
+                test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+              },
+              {
+                name: 'vendor-motion',
+                test: /node_modules[\\/](motion|framer-motion)[\\/]/,
+              },
+            ],
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(import.meta.dirname, '.'),

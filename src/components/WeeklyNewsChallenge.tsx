@@ -531,7 +531,7 @@ export const WeeklyNewsChallenge: React.FC<WeeklyNewsChallengeProps> = ({ risk, 
 
   return (
     <>
-      {/* ── 入口卡片（learn 分頁，DailyTasks 下方） ── */}
+      {/* ── 入口卡片（右側「時事挑戰」抽屜內） ── */}
       <div className="mt-3 bg-white rounded-3xl border-2 border-sky-200 p-4 shadow-sm">
         <div className="flex items-start gap-3">
           <div className="w-11 h-11 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center shrink-0">
@@ -599,7 +599,7 @@ export const WeeklyNewsChallenge: React.FC<WeeklyNewsChallengeProps> = ({ risk, 
                   </button>
                   <button
                     onClick={handleRegenerate}
-                    disabled={!canStart}
+                    disabled={busy}
                     aria-label="手動重新產生本週題目"
                     title="手動重新產生"
                     className="p-2.5 rounded-2xl border-2 border-slate-200 bg-white text-slate-500 hover:text-sky-600 hover:border-sky-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -617,6 +617,9 @@ export const WeeklyNewsChallenge: React.FC<WeeklyNewsChallengeProps> = ({ risk, 
       <AnimatePresence>
         {quizOpen && current && total > 0 && (
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="每週時事挑戰答題"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -752,7 +755,7 @@ export const WeeklyNewsChallenge: React.FC<WeeklyNewsChallengeProps> = ({ risk, 
                           </p>
                           {selected !== current.answer && (
                             <p className="text-[11px] text-rose-500 font-bold mt-1.5">
-                              已收入本週錯題紀錄，之後可複習
+                              已收入本週錯題紀錄，可再挑戰一次
                             </p>
                           )}
                         </motion.div>

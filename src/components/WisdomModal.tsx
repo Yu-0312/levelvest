@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BookOpen, Sparkles, X, Heart } from 'lucide-react';
 import { sound } from '../utils/audio';
 
@@ -13,6 +13,12 @@ export const WisdomModal: React.FC<WisdomModalProps> = ({
   onClose,
   onClaimHeart,
 }) => {
+  // 每次「開啟」抽一條箴言；抽出後固定，避免父層重渲時箴言跳走
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  useEffect(() => {
+    if (isOpen) setQuoteIndex(Math.floor(Math.random() * 3));
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const wisdomQuotes = [
@@ -33,7 +39,7 @@ export const WisdomModal: React.FC<WisdomModalProps> = ({
     },
   ];
 
-  const randomQuote = wisdomQuotes[Math.floor(Math.random() * wisdomQuotes.length)];
+  const randomQuote = wisdomQuotes[quoteIndex % wisdomQuotes.length];
 
   return (
     <div

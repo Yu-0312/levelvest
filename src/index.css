@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+/* 迷你斷點 xs（24rem/384px）：Header 圖示鈕的文字顯示用 */
+@theme {
+  --breakpoint-xs: 24rem;
+}
+
 @layer base {
   body {
     font-family: 'Nunito', 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

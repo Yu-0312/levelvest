@@ -16,6 +16,8 @@ export interface LeaderboardStudent {
 
 export interface UserStats {
   streak: number;
+  /** 最近一次「三項任務全清」的日期（在地日），連勝判定用；無則視為尚未連勝 */
+  lastStreakDate?: string;
   gems: number;
   hearts: number;
   maxHearts: number;

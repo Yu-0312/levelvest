@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import confetti from 'canvas-confetti';
 import { Mascot } from './Mascot';
@@ -21,7 +21,6 @@ import { sound } from '../utils/audio';
 
 interface LeaderboardProps {
   students: LeaderboardStudent[];
-  userXp: number;
 }
 
 /** 🐂 = 牛牛本人：用紅牛吉祥物取代 emoji，其餘同學照舊 */
@@ -34,30 +33,40 @@ const Avatar: React.FC<{ avatar: string; px: number }> = ({ avatar, px }) =>
     <>{avatar}</>
   );
 
-export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStudents, userXp }) => {
+export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStudents }) => {
   const [students, setStudents] = useState<LeaderboardStudent[]>(initialStudents);
   const [cheeredStudentId, setCheeredStudentId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Simulated live countdown timer: "剩餘 2 天 14 小時 32 分"
-  const [timeLeft, setTimeLeft] = useState({
-    days: 2,
-    hours: 14,
-    minutes: 32,
-    seconds: 45,
-  });
+  // 本週結算倒數：以固定 deadline 計算剩餘時間（不會再出現分鐘歸零跳回 59 的倒流 bug）
+  const [deadline] = useState(() => Date.now() + ((2 * 24 + 14) * 3600 + 32 * 60 + 45) * 1000);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: 59, seconds: 59 };
-        if (prev.hours > 0) return { ...prev, hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return prev;
-      });
-    }, 1000);
+    const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const timeLeft = useMemo(() => {
+    let rest = Math.max(0, Math.floor((deadline - now) / 1000));
+    const days = Math.floor(rest / 86400);
+    rest %= 86400;
+    const hours = Math.floor(rest / 3600);
+    rest %= 3600;
+    const minutes = Math.floor(rest / 60);
+    const seconds = rest % 60;
+    return { days, hours, minutes, seconds };
+  }, [deadline, now]);
+
+  // cheer 後的提示 timer：unmount 時清理，避免 setState on unmounted
+  const timersRef = useRef<number[]>([]);
+  useEffect(
+    () => () => {
+      timersRef.current.forEach((t) => window.clearTimeout(t));
+      timersRef.current = [];
+    },
+    []
+  );
 
   const handleCheer = (student: LeaderboardStudent, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -72,17 +81,24 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStude
     const chosenCheer = cheers[Math.floor(Math.random() * cheers.length)];
     setToastMessage(`你為 ${student.school} 的 ${student.name} ${chosenCheer}`);
 
-    setTimeout(() => {
-      setCheeredStudentId(null);
-    }, 1200);
-
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
+    timersRef.current.push(
+      window.setTimeout(() => setCheeredStudentId(null), 1200),
+      window.setTimeout(() => setToastMessage(null), 3000)
+    );
   };
 
-  const top3 = students.slice(0, 3);
-  const ranks4to10 = students.slice(3, 10);
+  // 依實際每週 XP 重算名次（使用者升級後名次會真的動）
+  const ranked = useMemo(
+    () =>
+      [...students]
+        .sort((a, b) => b.weeklyXp - a.weeklyXp)
+        .map((s, i) => ({ ...s, rank: i + 1 })),
+    [students]
+  );
+  const top3 = ranked.slice(0, 3);
+  const ranks4to10 = ranked.slice(3, 10);
+  const me = ranked.find((s) => s.isCurrentUser);
+  const promotionCut = ranked[2]?.weeklyXp ?? 0;
 
   return (
     <div id="leaderboard-view" className="w-full max-w-xl mx-auto px-4 py-4 pb-28 space-y-5">
@@ -339,10 +355,18 @@ export const Leaderboard: React.FC<LeaderboardProps> = ({ students: initialStude
       </div>
 
       {/* Encouragement Footer Banner */}
-      <div className="bg-slate-100 rounded-2xl p-3.5 text-center text-xs font-bold text-slate-600 border border-slate-200">
-        距離晉升鑽石聯賽還差{' '}
-        <span className="text-[#58CC02] font-black">130 XP</span>！完成今天的 20MA
-        實戰課題即可迎頭趕上 🚀
+      <div className="bg-slate-100 rounded-2xl p-3.5 text-center text-xs font-black text-slate-600 border border-slate-200">
+        {me && me.rank <= 3 ? (
+          <span className="text-[#58CC02]">你目前在晉級區（第 {me.rank} 名）！保持住，結算前守住前 3 名就能晉級 💎</span>
+        ) : me ? (
+          <>
+            距離晉升鑽石聯賽還差{' '}
+            <span className="text-[#58CC02] font-black">{promotionCut - me.weeklyXp + 1} XP</span>
+            ！多完成幾堂課與時事挑戰就能迎頭趕上 🚀
+          </>
+        ) : (
+          '完成每天的學習任務，累積每週 XP 衝擊晉級線！🚀'
+        )}
       </div>
     </div>
   );
