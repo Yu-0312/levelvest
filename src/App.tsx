@@ -6,6 +6,7 @@ import {
   Trophy,
   Target,
   CandlestickChart,
+  BarChart3,
 } from 'lucide-react';
 import {
   TabType,
@@ -41,6 +42,9 @@ import { AITutor, type TutorContext } from './components/AITutor';
 import { ShareCard } from './components/ShareCard';
 import { sound } from './utils/audio';
 
+/** 分頁型別：共用 TabType 再加上模擬投組與學習儀表板（不改動共用 types.ts） */
+type AppTab = TabType | 'paper' | 'dashboard';
+
 // 依需載入：起跑測驗、課程播放器、排行榜、日記都各自切成獨立 chunk，
 // 首屏只載入地圖主畫面（含 motion/ confetti 的模組延後載入）。
 const LessonPlayer = React.lazy(() =>
@@ -61,11 +65,11 @@ const SettingsModal = React.lazy(() =>
 const PaperTrading = React.lazy(() =>
   import('./components/PaperTrading').then((m) => ({ default: m.PaperTrading }))
 );
+const LearningDashboard = React.lazy(() =>
+  import('./components/LearningDashboard').then((m) => ({ default: m.LearningDashboard }))
+);
 
 const LS_KEY = 'levelvest-save-v1';
-
-/** 分頁型別：共用 TabType 再加上模擬投組（不改動共用 types.ts） */
-type AppTab = TabType | 'paper';
 
 interface SaveState {
   onboarded: boolean;
@@ -554,7 +558,7 @@ export default function App() {
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
         {/* Tabs */}
         <div className="pt-3 px-4 flex items-center justify-center">
-          <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black max-w-full overflow-x-auto">
+          <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {(
               [
                 ['learn', '學習地圖', MapPin, 'text-[#58CC02]'],
@@ -562,6 +566,7 @@ export default function App() {
                 ['journal', '決策日記', BookMarked, 'text-emerald-600'],
                 ['paper', '模擬投組', CandlestickChart, 'text-sky-500'],
                 ['badges', '成就勳章', Award, 'text-amber-500'],
+                ['dashboard', '學習儀表板', BarChart3, 'text-sky-500'],
               ] as const
             ).map(([tab, label, Icon, color]) => (
               <button
@@ -624,6 +629,14 @@ export default function App() {
           <Suspense fallback={<ScreenFallback label="載入模擬投組…" />}>
             <PaperTrading />
           </Suspense>
+        )}
+
+        {currentTab === 'dashboard' && (
+          <div className="flex-1 flex flex-col">
+            <Suspense fallback={<ScreenFallback label="載入學習儀表板…" />}>
+              <LearningDashboard />
+            </Suspense>
+          </div>
         )}
 
         {currentTab === 'badges' && (
@@ -694,6 +707,7 @@ export default function App() {
               ['journal', '決策日記', BookMarked],
               ['paper', '模擬投組', CandlestickChart],
               ['badges', '紀律勳章', Award],
+              ['dashboard', '儀表板', BarChart3],
             ] as const
           ).map(([tab, label, Icon]) => (
             <button
