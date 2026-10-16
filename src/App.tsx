@@ -31,6 +31,7 @@ import { curriculum } from './data/curriculum';
 import { Header } from './components/Header';
 import { SkillTree } from './components/SkillTree';
 import { DailyTasks } from './components/DailyTasks';
+import { WeeklyNewsChallenge } from './components/WeeklyNewsChallenge';
 import { HeartRefillModal } from './components/HeartRefillModal';
 import { HeartReviewQuiz } from './components/HeartReviewQuiz';
 import { SkipGradeModal } from './components/SkipGradeModal';
@@ -424,6 +425,15 @@ export default function App() {
     grantXp(correct * 5);
   };
 
+  /** 每週時事挑戰結算：XP 與寶石由 App 端入帳（元件本身不動 stats） */
+  const handleWeeklyNewsReward = (xp: number, gems: number) => {
+    if (xp > 0) grantXp(xp);
+    if (gems > 0) {
+      sound.playCoin();
+      setStats((prev) => ({ ...prev, gems: prev.gems + gems }));
+    }
+  };
+
   const handleLogDecision = (decision: TradeDecision) => {
     setTradeDecisions((prev) => [decision, ...prev]);
     setDaily((prev) => ({
@@ -566,6 +576,10 @@ export default function App() {
           <div className="flex-1 flex flex-col">
             <div className="px-4 pt-3">
               <DailyTasks daily={daily} userName={stats.userName || '同學'} />
+              <WeeklyNewsChallenge
+                risk={profile?.risk ?? null}
+                onReward={handleWeeklyNewsReward}
+              />
             </div>
             <SkillTree
               sections={curriculum}
