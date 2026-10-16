@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   MapPin,
   BookMarked,
@@ -53,11 +53,52 @@ interface SaveState {
   daily: DailyState;
 }
 
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** 每日任務：跨日自動歸零；同一天則沿用進度 */
+function normalizeDaily(saved: DailyState | undefined): DailyState {
+  const fresh: DailyState = {
+    date: today(),
+    freezeDays: typeof saved?.freezeDays === 'number' ? saved.freezeDays : initialDaily.freezeDays,
+    tasks: initialDaily.tasks.map((t) => ({ ...t })),
+  };
+  if (!saved || !Array.isArray(saved.tasks) || saved.date !== fresh.date) return fresh;
+  return {
+    ...fresh,
+    tasks: fresh.tasks.map((t) => {
+      const prev = saved.tasks.find((x) => x.id === t.id);
+      const done = prev ? Number(prev.done) : 0;
+      return { ...t, done: Number.isFinite(done) ? Math.min(t.target, done) : 0 };
+    }),
+  };
+}
+
+/**
+ * 讀檔並補齊／校正欄位：舊版本存檔、損毀資料或缺欄位時以預設值兜底，
+ * 避免整頁白屏。
+ */
 function loadSave(): SaveState | null {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as SaveState;
+    const parsed = JSON.parse(raw) as Partial<SaveState> | null;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return {
+      onboarded: parsed.onboarded === true,
+      profile: parsed.profile ?? null,
+      stats: { ...initialStats, ...(parsed.stats ?? {}) },
+      progress: parsed.progress ?? {},
+      unlockedSections:
+        Array.isArray(parsed.unlockedSections) && parsed.unlockedSections.length > 0
+          ? parsed.unlockedSections
+          : ['s1'],
+      trades: Array.isArray(parsed.trades) ? parsed.trades : initialTradeDecisions,
+      badges:
+        Array.isArray(parsed.badges) && parsed.badges.length > 0 ? parsed.badges : badgesData,
+      daily: normalizeDaily(parsed.daily),
+    };
   } catch {
     return null;
   }
@@ -115,6 +156,11 @@ export default function App() {
     });
   }, [onboarded, profile, stats, progress, unlockedSections, tradeDecisions, badges, daily]);
 
+  // 音效開關以存檔為準：原先只在手動切換時才套用，重新整理後舊設定會失效
+  useEffect(() => {
+    sound.enabled = stats.soundEnabled;
+  }, [stats.soundEnabled]);
+
   // 監聽捲動，判斷「當前關卡」是否還在畫面內
   useEffect(() => {
     if (currentTab !== 'learn') {
@@ -155,12 +201,16 @@ export default function App() {
   };
 
   const handleDeductHeart = () => {
-    setStats((prev) => {
-      const nextHearts = Math.max(0, prev.hearts - 1);
-      if (nextHearts === 0) setIsHeartRefillOpen(true);
-      return { ...prev, hearts: nextHearts };
-    });
+    // updater 保持純函式：不在 updater 內呼叫 setState（StrictMode 會重複執行 updater）
+    setStats((prev) => ({ ...prev, hearts: Math.max(0, prev.hearts - 1) }));
   };
+
+  // 愛心歸零時開啟補血彈窗（以「1 → 0 的轉變」判斷，重新整理後已有 0 心存檔時不自動跳出）
+  const heartsRef = useRef(stats.hearts);
+  useEffect(() => {
+    if (stats.hearts === 0 && heartsRef.current !== 0) setIsHeartRefillOpen(true);
+    heartsRef.current = stats.hearts;
+  }, [stats.hearts]);
 
   const handleRefillWithGems = () => {
     if (stats.gems < 50) return;
@@ -219,32 +269,37 @@ export default function App() {
   };
 
   const handleCompleteLesson = (lessonId: string, stars: number, xp: number, gems: number) => {
-    setProgress((prev) => {
-      const updated: LessonProgress = {
-        ...prev,
-        [lessonId]: { stars: Math.max(stars, prev[lessonId]?.stars ?? 0), completed: true },
-      };
-      if (activeSection) maybeUnlockNext(activeSection.id, updated);
-      return updated;
-    });
+    const updated: LessonProgress = {
+      ...progress,
+      [lessonId]: {
+        stars: Math.max(stars, progress[lessonId]?.stars ?? 0),
+        completed: true,
+      },
+    };
+    setProgress(updated);
+    // 解鎖下一章的檢查移到更新函式外（在 updater 內呼叫 setState 會被 StrictMode 重複執行）
+    if (activeSection) maybeUnlockNext(activeSection.id, updated);
 
     setStats((prev) => {
-      let newXp = prev.xp + xp;
-      let newLevel = prev.level;
-      let newNextLevelXp = prev.nextLevelXp;
+      let xpPool = prev.xp + xp;
+      let level = prev.level;
+      let nextLevelXp = prev.nextLevelXp;
+      // 一次獎勵可能跨多級（例如一次拿滿星通過 BOSS），改用迴圈結算
+      while (xpPool >= nextLevelXp) {
+        level += 1;
+        xpPool -= nextLevelXp;
+        nextLevelXp = Math.round(nextLevelXp * 1.35);
+      }
       let newTitle = prev.title;
-      if (newXp >= newNextLevelXp) {
-        newLevel += 1;
-        newXp -= newNextLevelXp;
-        newNextLevelXp = Math.round(newNextLevelXp * 1.35);
-        if (newLevel >= 5 && profile) newTitle = '紀律鍛造者';
-        if (newLevel >= 8 && profile) newTitle = '校園投資傳奇';
+      if (profile) {
+        if (level >= 8) newTitle = '校園投資傳奇';
+        else if (level >= 5) newTitle = '紀律鍛造者';
       }
       return {
         ...prev,
-        xp: newXp,
-        level: newLevel,
-        nextLevelXp: newNextLevelXp,
+        xp: xpPool,
+        level,
+        nextLevelXp,
         title: newTitle,
         gems: prev.gems + gems,
       };
