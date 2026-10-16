@@ -38,7 +38,6 @@ import { HeartRefillModal } from './components/HeartRefillModal';
 import { SkipGradeModal } from './components/SkipGradeModal';
 import { SettingsModal } from './components/SettingsModal';
 import { WisdomModal } from './components/WisdomModal';
-import { FloatingMascot } from './components/FloatingMascot';
 import { sound } from './utils/audio';
 
 const LS_KEY = 'levelvest-save-v1';
@@ -546,13 +545,6 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         onReset={handleResetProgress}
         stats={stats}
-      />
-
-      {/* 全域牛牛：固定在角落，跟著所有分頁與闖關畫面 */}
-      <FloatingMascot
-        currentTab={currentTab}
-        hearts={stats.hearts}
-        isLessonOpen={isLessonOpen}
       />
 
       <WisdomModal
