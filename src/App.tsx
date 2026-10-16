@@ -35,6 +35,7 @@ import { HeartRefillModal } from './components/HeartRefillModal';
 import { HeartReviewQuiz } from './components/HeartReviewQuiz';
 import { SkipGradeModal } from './components/SkipGradeModal';
 import { WisdomModal } from './components/WisdomModal';
+import { ShareCard } from './components/ShareCard';
 import { sound } from './utils/audio';
 
 // 依需載入：起跑測驗、課程播放器、排行榜、日記都各自切成獨立 chunk，
@@ -642,6 +643,9 @@ export default function App() {
                 </div>
               ))}
             </div>
+
+            {/* 學習證明分享卡：把目前進度畫成 1200×630 的可下載分享圖 */}
+            <ShareCard stats={stats} progress={progress} badges={badges} />
           </div>
         )}
       </main>
