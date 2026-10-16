@@ -22,7 +22,7 @@ interface LessonPlayerProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (lessonId: string, stars: number, xp: number, gems: number) => void;
-  onWrongAnswer: () => void;
+  onWrongAnswer: (questionKey: string) => void;
   onCorrectCalcOrData?: () => void;
 }
 
@@ -97,7 +97,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
     } else {
       sound.playError();
       setWrongCount((w) => w + 1);
-      onWrongAnswer();
+      onWrongAnswer(`${lesson.id}#${qIndex}`);
     }
   };
 

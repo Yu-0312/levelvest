@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Gem, BookOpen, X, Sparkles } from 'lucide-react';
+import { Heart, Gem, BookOpen, X, Sparkles, HeartPulse } from 'lucide-react';
 import { sound } from '../utils/audio';
 
 interface HeartRefillModalProps {
@@ -10,6 +10,8 @@ interface HeartRefillModalProps {
   onClose: () => void;
   onRefillWithGems: () => void;
   onReadMungerWisdom: () => void;
+  /** 免費複習題庫：答對 1 題恢復 1 顆心 */
+  onReviewPractice: () => void;
 }
 
 export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({
@@ -20,6 +22,7 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({
   onClose,
   onRefillWithGems,
   onReadMungerWisdom,
+  onReviewPractice,
 }) => {
   if (!isOpen) return null;
 
@@ -52,10 +55,36 @@ export const HeartRefillModal: React.FC<HeartRefillModalProps> = ({
           生命值：{hearts} / {maxHearts}
         </h3>
         <p className="text-xs text-slate-500 mb-5 leading-relaxed">
-          答錯投資實戰題目會扣除 1 顆心。心臟耗盡時需要回血才能進行新挑戰。
+          答錯投資實戰題目會扣除 1 顆心。心臟耗盡時，需先複習或補血才能開始新的挑戰。
         </p>
 
         <div className="space-y-3 mb-4">
+          {/* Option 0: Free review quiz — answer right to regain hearts */}
+          <button
+            onClick={() => {
+              onReviewPractice();
+            }}
+            disabled={hearts >= maxHearts}
+            className={`w-full p-3.5 rounded-2xl border-2 flex items-center justify-between text-left transition-all ${
+              hearts >= maxHearts
+                ? 'bg-slate-50 border-slate-200 opacity-60 cursor-not-allowed'
+                : 'bg-rose-50 hover:bg-rose-100/70 border-rose-300 text-slate-800 cursor-pointer active:scale-[0.98]'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-rose-500 rounded-xl text-white">
+                <HeartPulse className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="font-extrabold text-sm text-slate-800">複習賺回心心 ❤️</p>
+                <p className="text-[11px] text-slate-500">答對 1 題恢復 1 顆心（錯題優先）</p>
+              </div>
+            </div>
+            <span className="text-xs font-black text-rose-700 bg-rose-100 px-2 py-1 rounded-full">
+              免費
+            </span>
+          </button>
+
           {/* Option 1: Buy full refill with Gems */}
           <button
             onClick={() => {

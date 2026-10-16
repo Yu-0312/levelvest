@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import {
   MapPin,
   BookMarked,
@@ -17,6 +17,7 @@ import {
   Section,
   Lesson,
   DailyState,
+  ReviewQuestion,
 } from './types';
 import {
   initialStats,
@@ -29,16 +30,30 @@ import {
 import { curriculum } from './data/curriculum';
 import { Header } from './components/Header';
 import { SkillTree } from './components/SkillTree';
-import { LessonPlayer } from './components/LessonPlayer';
-import { OnboardingSurvey } from './components/OnboardingSurvey';
 import { DailyTasks } from './components/DailyTasks';
-import { TradeJournal } from './components/TradeJournal';
-import { Leaderboard } from './components/Leaderboard';
 import { HeartRefillModal } from './components/HeartRefillModal';
+import { HeartReviewQuiz } from './components/HeartReviewQuiz';
 import { SkipGradeModal } from './components/SkipGradeModal';
-import { SettingsModal } from './components/SettingsModal';
 import { WisdomModal } from './components/WisdomModal';
 import { sound } from './utils/audio';
+
+// 依需載入：起跑測驗、課程播放器、排行榜、日記都各自切成獨立 chunk，
+// 首屏只載入地圖主畫面（含 motion/ confetti 的模組延後載入）。
+const LessonPlayer = React.lazy(() =>
+  import('./components/LessonPlayer').then((m) => ({ default: m.LessonPlayer }))
+);
+const OnboardingSurvey = React.lazy(() =>
+  import('./components/OnboardingSurvey').then((m) => ({ default: m.OnboardingSurvey }))
+);
+const TradeJournal = React.lazy(() =>
+  import('./components/TradeJournal').then((m) => ({ default: m.TradeJournal }))
+);
+const Leaderboard = React.lazy(() =>
+  import('./components/Leaderboard').then((m) => ({ default: m.Leaderboard }))
+);
+const SettingsModal = React.lazy(() =>
+  import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal }))
+);
 
 const LS_KEY = 'levelvest-save-v1';
 
@@ -51,13 +66,64 @@ interface SaveState {
   trades: TradeDecision[];
   badges: BehavioralBadge[];
   daily: DailyState;
+  /** 錯題紀錄：questionKey → 答錯次數（複習時優先出題） */
+  missed: Record<string, number>;
 }
 
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** 每日任務：跨日自動歸零；同一天則沿用進度 */
+function normalizeDaily(saved: DailyState | undefined): DailyState {
+  const fresh: DailyState = {
+    date: today(),
+    freezeDays: typeof saved?.freezeDays === 'number' ? saved.freezeDays : initialDaily.freezeDays,
+    tasks: initialDaily.tasks.map((t) => ({ ...t })),
+  };
+  if (!saved || !Array.isArray(saved.tasks) || saved.date !== fresh.date) return fresh;
+  return {
+    ...fresh,
+    tasks: fresh.tasks.map((t) => {
+      const prev = saved.tasks.find((x) => x.id === t.id);
+      const done = prev ? Number(prev.done) : 0;
+      return { ...t, done: Number.isFinite(done) ? Math.min(t.target, done) : 0 };
+    }),
+  };
+}
+
+/**
+ * 讀檔並補齊／校正欄位：舊版本存檔、損毀資料或缺欄位時以預設值兜底，
+ * 避免整頁白屏。
+ */
 function loadSave(): SaveState | null {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as SaveState;
+    const parsed = JSON.parse(raw) as Partial<SaveState> | null;
+    if (!parsed || typeof parsed !== 'object') return null;
+    return {
+      onboarded: parsed.onboarded === true,
+      profile: parsed.profile ?? null,
+      stats: { ...initialStats, ...(parsed.stats ?? {}) },
+      progress: parsed.progress ?? {},
+      unlockedSections:
+        Array.isArray(parsed.unlockedSections) && parsed.unlockedSections.length > 0
+          ? parsed.unlockedSections
+          : ['s1'],
+      trades: Array.isArray(parsed.trades) ? parsed.trades : initialTradeDecisions,
+      badges:
+        Array.isArray(parsed.badges) && parsed.badges.length > 0 ? parsed.badges : badgesData,
+      daily: normalizeDaily(parsed.daily),
+      missed:
+        parsed.missed && typeof parsed.missed === 'object'
+          ? Object.fromEntries(
+              Object.entries(parsed.missed).filter(
+                ([, v]) => typeof v === 'number' && Number.isFinite(v) && v > 0
+              )
+            )
+          : {},
+    };
   } catch {
     return null;
   }
@@ -69,6 +135,20 @@ function persist(state: SaveState) {
   } catch {
     /* ignore quota errors */
   }
+}
+
+/** 動態 chunk 載入中的占位畫面 */
+function ScreenFallback({ label = '載入中…' }: { label?: string }) {
+  return (
+    <div
+      className="min-h-screen w-full flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-[#F0F9FF] via-white to-[#F8FAFC]"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="w-10 h-10 rounded-full border-4 border-[#58CC02] border-t-transparent animate-spin" />
+      <p className="text-sm font-bold text-slate-500">{label}</p>
+    </div>
+  );
 }
 
 export default function App() {
@@ -86,6 +166,8 @@ export default function App() {
   );
   const [badges, setBadges] = useState<BehavioralBadge[]>(saved?.badges ?? badgesData);
   const [daily, setDaily] = useState<DailyState>(saved?.daily ?? initialDaily);
+  /** 錯題紀錄：questionKey（lessonId#題號）→ 答錯次數 */
+  const [missed, setMissed] = useState<Record<string, number>>(saved?.missed ?? {});
   const [students, setStudents] = useState<LeaderboardStudent[]>(leaderboardStudents);
 
   const [currentTab, setCurrentTab] = useState<TabType>('learn');
@@ -93,6 +175,8 @@ export default function App() {
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [isLessonOpen, setIsLessonOpen] = useState(false);
   const [isHeartRefillOpen, setIsHeartRefillOpen] = useState(false);
+  /** 複習回血測驗（愛心歸零時強制進入） */
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isWisdomModalOpen, setIsWisdomModalOpen] = useState(false);
   /** 跳級確認彈窗的目標章節 */
   const [jumpTarget, setJumpTarget] = useState<Section | null>(null);
@@ -112,8 +196,14 @@ export default function App() {
       trades: tradeDecisions,
       badges,
       daily,
+      missed,
     });
-  }, [onboarded, profile, stats, progress, unlockedSections, tradeDecisions, badges, daily]);
+  }, [onboarded, profile, stats, progress, unlockedSections, tradeDecisions, badges, daily, missed]);
+
+  // 音效開關以存檔為準：原先只在手動切換時才套用，重新整理後舊設定會失效
+  useEffect(() => {
+    sound.enabled = stats.soundEnabled;
+  }, [stats.soundEnabled]);
 
   // 監聽捲動，判斷「當前關卡」是否還在畫面內
   useEffect(() => {
@@ -155,12 +245,13 @@ export default function App() {
   };
 
   const handleDeductHeart = () => {
-    setStats((prev) => {
-      const nextHearts = Math.max(0, prev.hearts - 1);
-      if (nextHearts === 0) setIsHeartRefillOpen(true);
-      return { ...prev, hearts: nextHearts };
-    });
+    setStats((prev) => ({ ...prev, hearts: Math.max(0, prev.hearts - 1) }));
   };
+
+  // 愛心歸零時自動開啟錯題複習（答題回血，答對 1 題回 1 顆心）
+  useEffect(() => {
+    if (stats.hearts === 0) setIsReviewOpen(true);
+  }, [stats.hearts]);
 
   const handleRefillWithGems = () => {
     if (stats.gems < 50) return;
@@ -196,6 +287,8 @@ export default function App() {
     setTradeDecisions(initialTradeDecisions);
     setBadges(badgesData);
     setDaily({ ...initialDaily, tasks: initialDaily.tasks.map((t) => ({ ...t })) });
+    setMissed({});
+    setIsReviewOpen(false);
     setStudents(leaderboardStudents);
     setCurrentTab('learn');
     setActiveSection(null);
@@ -219,32 +312,37 @@ export default function App() {
   };
 
   const handleCompleteLesson = (lessonId: string, stars: number, xp: number, gems: number) => {
-    setProgress((prev) => {
-      const updated: LessonProgress = {
-        ...prev,
-        [lessonId]: { stars: Math.max(stars, prev[lessonId]?.stars ?? 0), completed: true },
-      };
-      if (activeSection) maybeUnlockNext(activeSection.id, updated);
-      return updated;
-    });
+    const updated: LessonProgress = {
+      ...progress,
+      [lessonId]: {
+        stars: Math.max(stars, progress[lessonId]?.stars ?? 0),
+        completed: true,
+      },
+    };
+    setProgress(updated);
+    // 解鎖下一章的檢查移到更新函式外（在 updater 內呼叫 setState 會被 StrictMode 重複執行）
+    if (activeSection) maybeUnlockNext(activeSection.id, updated);
 
     setStats((prev) => {
-      let newXp = prev.xp + xp;
-      let newLevel = prev.level;
-      let newNextLevelXp = prev.nextLevelXp;
+      let xpPool = prev.xp + xp;
+      let level = prev.level;
+      let nextLevelXp = prev.nextLevelXp;
+      // 一次獎勵可能跨多級（例如一次拿滿星通過 BOSS），改用迴圈結算
+      while (xpPool >= nextLevelXp) {
+        level += 1;
+        xpPool -= nextLevelXp;
+        nextLevelXp = Math.round(nextLevelXp * 1.35);
+      }
       let newTitle = prev.title;
-      if (newXp >= newNextLevelXp) {
-        newLevel += 1;
-        newXp -= newNextLevelXp;
-        newNextLevelXp = Math.round(newNextLevelXp * 1.35);
-        if (newLevel >= 5 && profile) newTitle = '紀律鍛造者';
-        if (newLevel >= 8 && profile) newTitle = '校園投資傳奇';
+      if (profile) {
+        if (level >= 8) newTitle = '校園投資傳奇';
+        else if (level >= 5) newTitle = '紀律鍛造者';
       }
       return {
         ...prev,
-        xp: newXp,
-        level: newLevel,
-        nextLevelXp: newNextLevelXp,
+        xp: xpPool,
+        level,
+        nextLevelXp,
         title: newTitle,
         gems: prev.gems + gems,
       };
@@ -265,8 +363,65 @@ export default function App() {
     );
   };
 
-  const handleWrongAnswer = () => {
+  const handleWrongAnswer = (questionKey: string) => {
     handleDeductHeart();
+    // 記入錯題本：複習時優先出題
+    setMissed((prev) => ({
+      ...prev,
+      [questionKey]: (prev[questionKey] ?? 0) + 1,
+    }));
+  };
+
+  /** 複習中答錯：只記錯題，不扣心（已經是 0） */
+  const handleReviewWrong = (questionKey: string) => {
+    setMissed((prev) => ({
+      ...prev,
+      [questionKey]: (prev[questionKey] ?? 0) + 1,
+    }));
+  };
+
+  /** 複習答對 1 題 → 恢復 1 顆心（封頂 maxHearts） */
+  const handleEarnHeart = () => {
+    setStats((prev) => ({
+      ...prev,
+      hearts: Math.min(prev.maxHearts, prev.hearts + 1),
+    }));
+  };
+
+  /** 統一的 XP 給與（含升級判定與排行榜同步） */
+  const grantXp = (xp: number) => {
+    if (xp <= 0) return;
+    setStats((prev) => {
+      let xpPool = prev.xp + xp;
+      let level = prev.level;
+      let nextLevelXp = prev.nextLevelXp;
+      // 一次獎勵可能跨多級，改用迴圈結算（與通關結算一致）
+      while (xpPool >= nextLevelXp) {
+        level += 1;
+        xpPool -= nextLevelXp;
+        nextLevelXp = Math.round(nextLevelXp * 1.35);
+      }
+      let newTitle = prev.title;
+      if (profile) {
+        if (level >= 8) newTitle = '校園投資傳奇';
+        else if (level >= 5) newTitle = '紀律鍛造者';
+      }
+      return {
+        ...prev,
+        xp: xpPool,
+        level,
+        nextLevelXp,
+        title: newTitle,
+      };
+    });
+    setStudents((prev) =>
+      prev.map((s) => (s.isCurrentUser ? { ...s, weeklyXp: s.weeklyXp + xp } : s))
+    );
+  };
+
+  /** 複習一輪結束：發放小額 XP（每題 5 XP） */
+  const handleReviewComplete = (correct: number, _total: number) => {
+    grantXp(correct * 5);
   };
 
   const handleLogDecision = (decision: TradeDecision) => {
@@ -290,6 +445,11 @@ export default function App() {
   };
 
   const handleSelectLesson = (section: Section, lesson: Lesson) => {
+    // 愛心歸零 → 不能開始新關卡，先做錯題複習回血
+    if (stats.hearts === 0) {
+      setIsReviewOpen(true);
+      return;
+    }
     setActiveSection(section);
     setActiveLesson(lesson);
     setIsLessonOpen(true);
@@ -328,9 +488,37 @@ export default function App() {
     return curriculum.slice(0, idx + 1).filter((s) => !unlockedSections.includes(s.id));
   }, [jumpTarget, unlockedSections]);
 
+  /** 複習題庫：已解鎖章節的所有題目，附上錯題次數（錯題優先出題） */
+  const reviewPool = useMemo<ReviewQuestion[]>(() => {
+    const pool: ReviewQuestion[] = [];
+    for (const section of curriculum) {
+      if (!unlockedSections.includes(section.id)) continue;
+      for (const lesson of section.lessons) {
+        lesson.questions.forEach((question, i) => {
+          const key = `${lesson.id}#${i}`;
+          pool.push({
+            key,
+            question,
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            sectionTitle: section.title,
+            sectionCode: lesson.code,
+            sectionColor: section.color,
+            missCount: missed[key] ?? 0,
+          });
+        });
+      }
+    }
+    return pool;
+  }, [unlockedSections, missed]);
+
   // Onboarding gate
   if (!onboarded) {
-    return <OnboardingSurvey onComplete={handleOnboard} />;
+    return (
+      <Suspense fallback={<ScreenFallback label="載入中…" />}>
+        <OnboardingSurvey onComplete={handleOnboard} />
+      </Suspense>
+    );
   }
 
   return (
@@ -360,6 +548,7 @@ export default function App() {
                   sound.playClick();
                   setCurrentTab(tab);
                 }}
+                aria-current={currentTab === tab ? 'page' : undefined}
                 className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
                   currentTab === tab
                     ? 'bg-white text-slate-800 shadow-md scale-[1.03]'
@@ -390,15 +579,19 @@ export default function App() {
         )}
 
         {currentTab === 'leaderboard' && (
-          <Leaderboard students={students} userXp={stats.xp} />
+          <Suspense fallback={<ScreenFallback label="載入排行榜…" />}>
+            <Leaderboard students={students} userXp={stats.xp} />
+          </Suspense>
         )}
 
         {currentTab === 'journal' && (
-          <TradeJournal
-            decisions={tradeDecisions}
-            badges={badges}
-            onAddDecision={handleLogDecision}
-          />
+          <Suspense fallback={<ScreenFallback label="載入決策日記…" />}>
+            <TradeJournal
+              decisions={tradeDecisions}
+              badges={badges}
+              onAddDecision={handleLogDecision}
+            />
+          </Suspense>
         )}
 
         {currentTab === 'badges' && (
@@ -454,7 +647,10 @@ export default function App() {
       </main>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-200 py-2 px-3 shadow-lg md:hidden">
+      <nav
+        aria-label="主要分頁導覽"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t-2 border-slate-200 py-2 px-3 shadow-lg md:hidden"
+      >
         <div className="max-w-md mx-auto flex items-center justify-between">
           {(
             [
@@ -501,22 +697,24 @@ export default function App() {
 
       {/* Lesson player */}
       {activeSection && activeLesson && (
-        <LessonPlayer
-          section={activeSection}
-          lesson={activeLesson}
-          isOpen={isLessonOpen}
-          onClose={() => setIsLessonOpen(false)}
-          onComplete={handleCompleteLesson}
-          onWrongAnswer={handleWrongAnswer}
-          onCorrectCalcOrData={() => {
-            setDaily((prev) => ({
-              ...prev,
-              tasks: prev.tasks.map((t) =>
-                t.id === 'd2' ? { ...t, done: Math.min(t.target, t.done + 1) } : t
-              ),
-            }));
-          }}
-        />
+        <Suspense fallback={<ScreenFallback label="準備闖關…" />}>
+          <LessonPlayer
+            section={activeSection}
+            lesson={activeLesson}
+            isOpen={isLessonOpen}
+            onClose={() => setIsLessonOpen(false)}
+            onComplete={handleCompleteLesson}
+            onWrongAnswer={handleWrongAnswer}
+            onCorrectCalcOrData={() => {
+              setDaily((prev) => ({
+                ...prev,
+                tasks: prev.tasks.map((t) =>
+                  t.id === 'd2' ? { ...t, done: Math.min(t.target, t.done + 1) } : t
+                ),
+              }));
+            }}
+          />
+        </Suspense>
       )}
 
       <SkipGradeModal
@@ -538,14 +736,36 @@ export default function App() {
           setIsHeartRefillOpen(false);
           setIsWisdomModalOpen(true);
         }}
+        onReviewPractice={() => {
+          setIsHeartRefillOpen(false);
+          setIsReviewOpen(true);
+        }}
       />
 
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        onReset={handleResetProgress}
-        stats={stats}
+      {/* 錯題複習回血：愛心歸零時強制進入，答對 1 題恢復 1 顆心 */}
+      <HeartReviewQuiz
+        isOpen={isReviewOpen}
+        hearts={stats.hearts}
+        maxHearts={stats.maxHearts}
+        pool={reviewPool}
+        onClose={() => setIsReviewOpen(false)}
+        onEarnHeart={handleEarnHeart}
+        onWrong={handleReviewWrong}
+        onComplete={handleReviewComplete}
+        onOpenRefill={() => {
+          setIsReviewOpen(false);
+          setIsHeartRefillOpen(true);
+        }}
       />
+
+      <Suspense fallback={null}>
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          onReset={handleResetProgress}
+          stats={stats}
+        />
+      </Suspense>
 
       <WisdomModal
         isOpen={isWisdomModalOpen}

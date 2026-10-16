@@ -83,6 +83,22 @@ export interface Section {
   lessons: Lesson[];
 }
 
+/** 題目鑰匙（lessonId#題號），用來追蹤錯題出現次數 */
+export type QuestionKey = string;
+
+/** 複習題庫的一題（含出處，方便複習時回顧章節） */
+export interface ReviewQuestion {
+  key: QuestionKey;
+  question: QuizQuestion;
+  lessonId: string;
+  lessonTitle: string;
+  sectionTitle: string;
+  sectionCode: string;
+  sectionColor: string;
+  /** 歷史答錯次數（越高越優先出題） */
+  missCount: number;
+}
+
 export interface LessonProgressEntry {
   stars: number;
   completed: boolean;
