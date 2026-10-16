@@ -35,6 +35,7 @@ import { HeartRefillModal } from './components/HeartRefillModal';
 import { HeartReviewQuiz } from './components/HeartReviewQuiz';
 import { SkipGradeModal } from './components/SkipGradeModal';
 import { WisdomModal } from './components/WisdomModal';
+import { AITutor, type TutorContext } from './components/AITutor';
 import { sound } from './utils/audio';
 
 // 依需載入：起跑測驗、課程播放器、排行榜、日記都各自切成獨立 chunk，
@@ -184,6 +185,8 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   /** 地圖上目前關卡離開視線時，顯示「繼續闖關」懸浮按鈕 */
   const [showContinue, setShowContinue] = useState(false);
+  /** AI 對話導師：目前帶入的錯題情境（null = 關閉） */
+  const [tutorContext, setTutorContext] = useState<TutorContext | null>(null);
 
   // Persist
   useEffect(() => {
@@ -713,9 +716,17 @@ export default function App() {
                 ),
               }));
             }}
+            onAskTutor={setTutorContext}
           />
         </Suspense>
       )}
+
+      {/* AI 對話導師：由課程答錯畫面帶入題目情境 */}
+      <AITutor
+        isOpen={tutorContext !== null}
+        context={tutorContext}
+        onClose={() => setTutorContext(null)}
+      />
 
       <SkipGradeModal
         targetSection={jumpTarget}

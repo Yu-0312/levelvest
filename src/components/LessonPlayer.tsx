@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Lesson, Section } from '../types';
 import { Mascot } from './Mascot';
+import type { TutorContext } from './AITutor';
 import { sound } from '../utils/audio';
 
 interface LessonPlayerProps {
@@ -24,6 +25,8 @@ interface LessonPlayerProps {
   onComplete: (lessonId: string, stars: number, xp: number, gems: number) => void;
   onWrongAnswer: (questionKey: string) => void;
   onCorrectCalcOrData?: () => void;
+  /** 答錯畫面的「問 AI 老師」：帶題目情境給 AI 對話導師 */
+  onAskTutor?: (context: TutorContext) => void;
 }
 
 type Phase = 'intro' | 'quiz' | 'result';
@@ -36,6 +39,7 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
   onComplete,
   onWrongAnswer,
   onCorrectCalcOrData,
+  onAskTutor,
 }) => {
   const [phase, setPhase] = useState<Phase>('intro');
   const [qIndex, setQIndex] = useState(0);
@@ -308,6 +312,28 @@ export const LessonPlayer: React.FC<LessonPlayerProps> = ({
                         {selected === current.answer ? '答對了！' : '再想一下～'}
                       </p>
                       <p className="text-sm text-slate-700 leading-relaxed">{current.explain}</p>
+
+                      {selected !== null && selected !== current.answer && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            sound.playClick();
+                            onAskTutor?.({
+                              sectionTitle: section.title,
+                              lessonTitle: lesson.title,
+                              question: current.q,
+                              choices: current.choices,
+                              selectedChoice: current.choices[selected] ?? '',
+                              correctChoice: current.choices[current.answer] ?? '',
+                              explain: current.explain,
+                            });
+                          }}
+                          className="mt-3 w-full py-2.5 rounded-xl border-2 border-sky-300 bg-white hover:bg-sky-50 text-sky-600 font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Sparkles className="w-4 h-4" />
+                          問 AI 老師
+                        </button>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
