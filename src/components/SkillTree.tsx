@@ -18,6 +18,7 @@ import {
 import { Section, Lesson, LessonProgress, QuestionKind } from '../types';
 import { Mascot } from './Mascot';
 import { sound } from '../utils/audio';
+import { unitMascotLines, fallbackUnitLines } from '../data/unitMascots';
 
 interface SkillTreeProps {
   sections: Section[];
@@ -59,6 +60,60 @@ const kindIcon = (kind: QuestionKind, isBoss: boolean, status: 'completed' | 'ac
     default:
       return <Play className="w-7 h-7 text-white fill-white" />;
   }
+};
+
+interface UnitMascotProps {
+  side: 'left' | 'right';
+  emotion: 'happy' | 'celebrating' | 'thinking' | 'oops';
+  text: string;
+  /** 章節徽章 emoji，當作牛牛身上的小道具 */
+  badge: string;
+  dim?: boolean;
+}
+
+/**
+ * 單元吉祥物：絕對定位在該單元「關卡區」的左／右側，
+ * 內層用 sticky，所以捲動這個單元時牛牛會跟著停在視線中央，單元結束就跟著離開。
+ * 不接收點擊，不會擋到關卡節點。
+ */
+const UnitMascot: React.FC<UnitMascotProps> = ({ side, emotion, text, badge, dim }) => {
+  const right = side === 'right';
+  return (
+    <div
+      aria-hidden
+      className={`absolute inset-y-0 w-0 pointer-events-none z-10 ${
+        right
+          ? 'right-0 lg:right-auto lg:left-full'
+          : 'left-0 lg:left-auto lg:right-full'
+      }`}
+    >
+      <div
+        className={`sticky top-[38vh] flex flex-col w-max ${
+          right
+            ? 'items-end -translate-x-full lg:-translate-x-14 lg:items-start'
+            : 'items-start lg:-translate-x-[calc(100%-3.5rem)] lg:items-end'
+        } ${dim ? 'opacity-70 grayscale-[35%]' : ''}`}
+      >
+        <div
+          className={`mb-1 max-w-[7.5rem] lg:max-w-[11rem] bg-white border-2 border-slate-200 px-2 py-1 rounded-xl text-[10px] lg:text-[11px] font-bold leading-snug text-slate-700 shadow-sm ${
+            right ? 'rounded-br-sm' : 'rounded-bl-sm'
+          }`}
+        >
+          「{text}」
+        </div>
+        <div className="relative">
+          <Mascot
+            emotion={emotion}
+            size="md"
+            className="w-14! h-14! lg:w-20! lg:h-20!"
+          />
+          <span className="absolute -bottom-1 -right-1 text-base lg:text-lg leading-none drop-shadow">
+            {badge}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export const SkillTree: React.FC<SkillTreeProps> = ({
@@ -367,17 +422,21 @@ export const SkillTree: React.FC<SkillTreeProps> = ({
                   </div>
                 );
               })}
+
+              {/* 單元吉祥物：每個大單元一隻，貼在地圖旁邊，隨捲動停留在該單元範圍內 */}
+              <UnitMascot
+                side={sIdx % 2 === 0 ? 'right' : 'left'}
+                emotion={isDone ? 'celebrating' : unlocked ? 'happy' : 'thinking'}
+                text={
+                  (unitMascotLines[section.id] ?? fallbackUnitLines)[
+                    isDone ? 'done' : unlocked ? 'active' : 'locked'
+                  ]
+                }
+                badge={section.badge}
+                dim={!unlocked}
+              />
             </div>
 
-            {/* Mascot cheer on first active section */}
-            {sIdx === 0 && (
-              <div className="hidden sm:flex absolute -right-4 top-52 flex-col items-center pointer-events-none">
-                <div className="bg-white border-2 border-slate-200 px-2.5 py-1 rounded-xl text-[11px] font-bold text-slate-700 shadow-sm mb-1">
-                  「一關一關來，你行的！」
-                </div>
-                <Mascot emotion="celebrating" size="md" />
-              </div>
-            )}
           </div>
         );
       })}
