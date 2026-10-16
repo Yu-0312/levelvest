@@ -40,6 +40,7 @@ import { SkipGradeModal } from './components/SkipGradeModal';
 import { WisdomModal } from './components/WisdomModal';
 import { AITutor, type TutorContext } from './components/AITutor';
 import { ShareCard } from './components/ShareCard';
+import { SideDrawer } from './components/SideDrawer';
 import { sound } from './utils/audio';
 
 /** 分頁型別：共用 TabType 再加上模擬投組與學習儀表板（不改動共用 types.ts） */
@@ -196,6 +197,8 @@ export default function App() {
   const [jumpTarget, setJumpTarget] = useState<Section | null>(null);
   /** 設定彈窗（含重置進度） */
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const [isWeeklyDrawerOpen, setIsWeeklyDrawerOpen] = useState(false);
   /** 地圖上目前關卡離開視線時，顯示「繼續闖關」懸浮按鈕 */
   const [showContinue, setShowContinue] = useState(false);
   /** AI 對話導師：目前帶入的錯題情境（null = 關閉） */
@@ -553,6 +556,7 @@ export default function App() {
         onToggleSound={handleToggleSound}
         onOpenHeartRefill={() => setIsHeartRefillOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenWeeklyDrawer={() => setIsWeeklyDrawerOpen(true)}
       />
 
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
@@ -593,10 +597,6 @@ export default function App() {
           <div className="flex-1 flex flex-col">
             <div className="px-4 pt-3">
               <DailyTasks daily={daily} userName={stats.userName || '同學'} />
-              <WeeklyNewsChallenge
-                risk={profile?.risk ?? null}
-                onReward={handleWeeklyNewsReward}
-              />
             </div>
             <SkillTree
               sections={curriculum}
@@ -830,6 +830,18 @@ export default function App() {
         onClose={() => setIsWisdomModalOpen(false)}
         onClaimHeart={handleClaimWisdomHeart}
       />
+
+      {/* 右側抽屜：每週時事挑戰（頂部 Header「時事挑戰」鈕開啟） */}
+      <SideDrawer
+        isOpen={isWeeklyDrawerOpen}
+        onClose={() => setIsWeeklyDrawerOpen(false)}
+        title="每週時事挑戰"
+      >
+        <WeeklyNewsChallenge
+          risk={profile?.risk ?? null}
+          onReward={handleWeeklyNewsReward}
+        />
+      </SideDrawer>
     </div>
   );
 }

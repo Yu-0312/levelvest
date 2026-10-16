@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Gem, Heart, Volume2, VolumeX, ShieldCheck, Settings, TrendingUp } from 'lucide-react';
+import { Flame, Gem, Heart, Volume2, VolumeX, ShieldCheck, Settings, TrendingUp, Newspaper } from 'lucide-react';
 import { UserStats } from '../types';
 import { sound } from '../utils/audio';
 
@@ -8,6 +8,8 @@ interface HeaderProps {
   onToggleSound: () => void;
   onOpenHeartRefill: () => void;
   onOpenSettings: () => void;
+  /** 打開右側「每週時事挑戰」抽屜 */
+  onOpenWeeklyDrawer: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -15,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSound,
   onOpenHeartRefill,
   onOpenSettings,
+  onOpenWeeklyDrawer,
 }) => {
   const [showStreakModal, setShowStreakModal] = useState(false);
 
@@ -105,6 +108,21 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-[11px] text-rose-400 font-bold hidden xs:inline">
                 /{stats.maxHearts}
               </span>
+            </button>
+
+            {/* 每週時事挑戰抽屜入口（固定顯示，不藏進選單） */}
+            <button
+              id="weekly-drawer-btn"
+              onClick={() => {
+                sound.playClick();
+                onOpenWeeklyDrawer();
+              }}
+              aria-label="打開每週時事挑戰側邊欄"
+              className="flex items-center gap-1 px-2 py-1.5 rounded-xl border-2 border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 active:translate-y-0.5 transition text-xs sm:text-sm font-extrabold cursor-pointer"
+              title="每週時事挑戰"
+            >
+              <Newspaper className="w-4 h-4 text-sky-500" />
+              <span className="hidden xs:inline sm:inline">時事挑戰</span>
             </button>
 
             {/* Sound Toggle */}
