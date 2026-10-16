@@ -5,6 +5,7 @@ import {
   Award,
   Trophy,
   Target,
+  CandlestickChart,
 } from 'lucide-react';
 import {
   TabType,
@@ -57,8 +58,14 @@ const Leaderboard = React.lazy(() =>
 const SettingsModal = React.lazy(() =>
   import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal }))
 );
+const PaperTrading = React.lazy(() =>
+  import('./components/PaperTrading').then((m) => ({ default: m.PaperTrading }))
+);
 
 const LS_KEY = 'levelvest-save-v1';
+
+/** 分頁型別：共用 TabType 再加上模擬投組（不改動共用 types.ts） */
+type AppTab = TabType | 'paper';
 
 interface SaveState {
   onboarded: boolean;
@@ -173,7 +180,7 @@ export default function App() {
   const [missed, setMissed] = useState<Record<string, number>>(saved?.missed ?? {});
   const [students, setStudents] = useState<LeaderboardStudent[]>(leaderboardStudents);
 
-  const [currentTab, setCurrentTab] = useState<TabType>('learn');
+  const [currentTab, setCurrentTab] = useState<AppTab>('learn');
   const [activeSection, setActiveSection] = useState<Section | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [isLessonOpen, setIsLessonOpen] = useState(false);
@@ -547,12 +554,13 @@ export default function App() {
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
         {/* Tabs */}
         <div className="pt-3 px-4 flex items-center justify-center">
-          <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black">
+          <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner text-xs font-black max-w-full overflow-x-auto">
             {(
               [
                 ['learn', '學習地圖', MapPin, 'text-[#58CC02]'],
                 ['leaderboard', '社群聯賽', Trophy, 'text-amber-500'],
                 ['journal', '決策日記', BookMarked, 'text-emerald-600'],
+                ['paper', '模擬投組', CandlestickChart, 'text-sky-500'],
                 ['badges', '成就勳章', Award, 'text-amber-500'],
               ] as const
             ).map(([tab, label, Icon, color]) => (
@@ -563,7 +571,7 @@ export default function App() {
                   setCurrentTab(tab);
                 }}
                 aria-current={currentTab === tab ? 'page' : undefined}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-4 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-2 sm:px-3.5 py-2 rounded-xl transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                   currentTab === tab
                     ? 'bg-white text-slate-800 shadow-md scale-[1.03]'
                     : 'text-slate-500 hover:text-slate-800'
@@ -609,6 +617,12 @@ export default function App() {
               badges={badges}
               onAddDecision={handleLogDecision}
             />
+          </Suspense>
+        )}
+
+        {currentTab === 'paper' && (
+          <Suspense fallback={<ScreenFallback label="載入模擬投組…" />}>
+            <PaperTrading />
           </Suspense>
         )}
 
@@ -678,6 +692,7 @@ export default function App() {
               ['learn', '學習地圖', MapPin],
               ['leaderboard', '社群聯賽', Trophy],
               ['journal', '決策日記', BookMarked],
+              ['paper', '模擬投組', CandlestickChart],
               ['badges', '紀律勳章', Award],
             ] as const
           ).map(([tab, label, Icon]) => (
@@ -687,7 +702,7 @@ export default function App() {
                 sound.playClick();
                 setCurrentTab(tab);
               }}
-              className={`flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-2xl transition-all cursor-pointer ${
+              className={`flex flex-col items-center gap-0.5 py-1.5 px-1.5 sm:px-2.5 rounded-2xl transition-all cursor-pointer ${
                 currentTab === tab
                   ? 'text-[#58CC02] font-black scale-105 bg-[#F0FFF4] border border-emerald-100'
                   : 'text-slate-400 font-bold hover:text-slate-600 border border-transparent'
