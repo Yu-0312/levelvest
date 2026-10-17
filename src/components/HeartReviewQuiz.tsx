@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   X,
@@ -49,7 +49,8 @@ function shuffle<T>(arr: T[]): T[] {
 function pickRound(pool: ReviewQuestion[]): ReviewQuestion[] {
   const missed = pool.filter((q) => q.missCount > 0).sort((a, b) => b.missCount - a.missCount);
   const rest = pool.filter((q) => q.missCount === 0);
-  const picked = shuffle(missed).slice(0, ROUND_SIZE);
+  // 前 ROUND_SIZE 題取錯誤次數最多的（不打亂，保留權重排序的意義）
+  const picked = missed.slice(0, ROUND_SIZE);
   if (picked.length < ROUND_SIZE) {
     picked.push(...shuffle(rest).slice(0, ROUND_SIZE - picked.length));
   }
@@ -94,7 +95,10 @@ export const HeartReviewQuiz: React.FC<HeartReviewQuizProps> = ({
     }
   }
 
-  const round = useMemo(() => pickRound(pool), [pool, roundIndex]);
+  // 只在開新一輪時抽題：答題時錯題數變動會讓 pool 換新，若跟著重抽，
+  // 答完第 1 題後題目就會被換掉（解析對不上題目、同一題可能重複出現）
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const round = useMemo(() => pickRound(pool), [roundIndex]);
 
   if (!isOpen) return null;
 

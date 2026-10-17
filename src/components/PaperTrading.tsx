@@ -12,6 +12,7 @@ import {
   Info,
 } from 'lucide-react';
 import { sound } from '../utils/audio';
+import { localDateKey } from '../utils/date';
 
 /* ────────────────────────────────────────────────────────────
    模擬投組（Paper Trading）
@@ -150,6 +151,9 @@ interface PaperState {
   cash: number;
   positions: Record<string, Position>;
   trades: TradeRecord[];
+  /** 下單 XP 每日上限計數（在地日期 + 當日已發放筆數） */
+  xpDate?: string;
+  xpCount?: number;
 }
 
 interface StopAlert {
@@ -193,6 +197,8 @@ function loadPaperState(): PaperState {
       cash: Number.isFinite(Number(p.cash)) ? Number(p.cash) : INITIAL_CASH,
       positions,
       trades: Array.isArray(p.trades) ? p.trades : [],
+      xpDate: typeof p.xpDate === 'string' ? p.xpDate : undefined,
+      xpCount: Number.isFinite(Number(p.xpCount)) ? Math.max(0, Math.floor(Number(p.xpCount))) : 0,
     };
   } catch {
     return initialState();
@@ -334,6 +340,8 @@ interface PaperTradingProps {
 }
 
 const TRADE_XP = 10;
+/** 每天前幾筆下單才給 XP，避免用 1 股來回買賣洗經驗值 */
+const DAILY_XP_TRADES = 5;
 
 export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
   const [state, setState] = useState<PaperState>(() => loadPaperState());
@@ -482,6 +490,11 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
       emotion,
     };
 
+    const todayKey = localDateKey();
+    const xpUsed = state.xpDate === todayKey ? state.xpCount ?? 0 : 0;
+    const tradeXp = xpUsed < DAILY_XP_TRADES ? TRADE_XP : 0;
+    const xpPatch = { xpDate: todayKey, xpCount: xpUsed + (tradeXp > 0 ? 1 : 0) };
+
     setState((prev) => {
       const positions = { ...prev.positions };
       const existing = positions[orderCode];
@@ -494,12 +507,12 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
           avgCost: round2(newCost),
           stopLoss: existing?.stopLoss ?? null,
         };
-        return { ...prev, cash: prev.cash - amount, positions, trades: [record, ...prev.trades] };
+        return { ...prev, ...xpPatch, cash: prev.cash - amount, positions, trades: [record, ...prev.trades] };
       }
       const remain = (existing?.shares ?? 0) - shares;
       if (remain <= 0) delete positions[orderCode];
       else positions[orderCode] = { ...existing!, shares: remain };
-      return { ...prev, cash: prev.cash + amount, positions, trades: [record, ...prev.trades] };
+      return { ...prev, ...xpPatch, cash: prev.cash + amount, positions, trades: [record, ...prev.trades] };
     });
 
     // 清空表單（保留標的與方向，方便連續操作）
@@ -508,8 +521,8 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
     setFormError('');
     setStopAlerts([]);
     sound.playSuccess();
-    // 串進遊戲經濟：XP＋每日任務（App 端處理；未接線時靜默忽略）
-    onTrade?.({ xp: TRADE_XP });
+    // 串進遊戲經濟：XP（每日上限）＋每日任務（App 端處理；未接線時靜默忽略）
+    onTrade?.({ xp: tradeXp });
   };
 
   /* ── 停損價設定 ── */

@@ -392,6 +392,28 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
                 />
               </div>
 
+              <div>
+                <span className="block font-black text-slate-600 mb-1">當下情緒</span>
+                <div className="grid grid-cols-3 gap-1.5" role="radiogroup" aria-label="當下情緒">
+                  {(['冷靜理性', '略有猶豫', '克服FOMO'] as const).map((e) => (
+                    <button
+                      key={e}
+                      type="button"
+                      role="radio"
+                      aria-checked={emotions === e}
+                      onClick={() => setEmotions(e)}
+                      className={`py-2 rounded-xl border-2 font-black transition-colors cursor-pointer ${
+                        emotions === e
+                          ? 'border-teal-400 bg-teal-50 text-teal-700'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex items-center gap-2 pt-1">
                 <input
                   type="checkbox"

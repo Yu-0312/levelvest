@@ -264,13 +264,14 @@ export const LearningDashboard: React.FC = () => {
     const out: { date: string; label: string; rate: number | null }[] = [];
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
-      // 以 UTC 日曆日推算，與 todayKey()（toISOString）保持同一套日期基準
-      const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - i));
-      const key = d.toISOString().slice(0, 10);
+      // 以在地日曆日推算，與快照的 todayKey()（localDateKey）同一套日期基準；
+      // 之前用 UTC，台北 00:00–08:00 之間「今天」那格會對到前一天
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = localDateKey(d);
       const snap = map.get(key);
       out.push({
         date: key,
-        label: i === 0 ? '今天' : WEEKDAY[d.getUTCDay()],
+        label: i === 0 ? '今天' : WEEKDAY[d.getDay()],
         rate: snap && snap.target > 0 ? Math.min(100, (snap.done / snap.target) * 100) : null,
       });
     }
