@@ -3,7 +3,6 @@ import {
   MapPin,
   BookMarked,
   Award,
-  Trophy,
   Target,
   CandlestickChart,
   BarChart3,
@@ -13,7 +12,6 @@ import {
   UserStats,
   TradeDecision,
   BehavioralBadge,
-  LeaderboardStudent,
   OnboardingProfile,
   LessonProgress,
   Section,
@@ -25,7 +23,6 @@ import {
   initialStats,
   initialTradeDecisions,
   badgesData,
-  leaderboardStudents,
   initialDaily,
   titleFromProfile,
 } from './data/mockData';
@@ -37,15 +34,13 @@ import { HeartRefillModal } from './components/HeartRefillModal';
 import { HeartReviewQuiz } from './components/HeartReviewQuiz';
 import { SkipGradeModal } from './components/SkipGradeModal';
 import { WisdomModal } from './components/WisdomModal';
-import type { TutorContext } from './components/AITutor';
-import { SideDrawer } from './components/SideDrawer';
 import { localDateKey } from './utils/date';
 import { sound } from './utils/audio';
 
 /** 分頁型別：共用 TabType 再加上模擬投組與學習儀表板（不改動共用 types.ts） */
 type AppTab = TabType | 'paper' | 'dashboard';
 
-// 依需載入：起跑測驗、課程播放器、排行榜、日記都各自切成獨立 chunk，
+// 依需載入：起跑測驗、課程播放器、日記等都各自切成獨立 chunk，
 // 首屏只載入地圖主畫面（含 motion/ confetti 的模組延後載入）。
 const LessonPlayer = React.lazy(() =>
   import('./components/LessonPlayer').then((m) => ({ default: m.LessonPlayer }))
@@ -56,9 +51,6 @@ const OnboardingSurvey = React.lazy(() =>
 const TradeJournal = React.lazy(() =>
   import('./components/TradeJournal').then((m) => ({ default: m.TradeJournal }))
 );
-const Leaderboard = React.lazy(() =>
-  import('./components/Leaderboard').then((m) => ({ default: m.Leaderboard }))
-);
 const SettingsModal = React.lazy(() =>
   import('./components/SettingsModal').then((m) => ({ default: m.SettingsModal }))
 );
@@ -68,19 +60,16 @@ const PaperTrading = React.lazy(() =>
 const LearningDashboard = React.lazy(() =>
   import('./components/LearningDashboard').then((m) => ({ default: m.LearningDashboard }))
 );
-// AI 導師／分享卡／時事挑戰只在特定情境用到（答錯、成就頁、抽屜），延後載入縮小主 bundle
-const AITutor = React.lazy(() =>
-  import('./components/AITutor').then((m) => ({ default: m.AITutor }))
-);
+// 分享卡只在成就頁用到，延後載入縮小主 bundle
 const ShareCardLazy = React.lazy(() =>
   import('./components/ShareCard').then((m) => ({ default: m.ShareCard }))
 );
-const WeeklyNewsChallenge = React.lazy(() =>
-  import('./components/WeeklyNewsChallenge').then((m) => ({ default: m.WeeklyNewsChallenge }))
-);
 
 const LS_KEY = 'levelvest-save-v1';
-/** 其他功能的專屬存檔 key：重置學習進度時必須一併清除，避免資料殘留 */
+/**
+ * 其他功能的專屬存檔 key：重置學習進度時必須一併清除，避免資料殘留。
+ * weekly-news / ai-tutor 是已移除功能留下的舊存檔，保留在清單中以便清乾淨。
+ */
 const EXTRA_LS_KEYS = [
   'levelvest-paper-trading-v1',
   'levelvest-dashboard-v1',
@@ -109,7 +98,6 @@ function today(): string {
 function normalizeDaily(saved: DailyState | undefined): DailyState {
   const fresh: DailyState = {
     date: today(),
-    freezeDays: typeof saved?.freezeDays === 'number' ? saved.freezeDays : initialDaily.freezeDays,
     tasks: initialDaily.tasks.map((t) => ({ ...t })),
   };
   if (!saved || !Array.isArray(saved.tasks) || saved.date !== fresh.date) return fresh;
@@ -121,6 +109,24 @@ function normalizeDaily(saved: DailyState | undefined): DailyState {
       return { ...t, done: Number.isFinite(done) ? Math.min(t.target, done) : 0 };
     }),
   };
+}
+
+/**
+ * 徽章以目前的 badgesData 為準：舊存檔裡已下架的徽章會被濾掉，
+ * 新增的徽章補上預設值，既有徽章保留進度與解鎖狀態。
+ */
+function normalizeBadges(saved: unknown): BehavioralBadge[] {
+  const prev = Array.isArray(saved) ? (saved as Partial<BehavioralBadge>[]) : [];
+  return badgesData.map((def) => {
+    const old = prev.find((b) => b && b.id === def.id);
+    if (!old) return { ...def };
+    const progress = Number(old.progress);
+    return {
+      ...def,
+      progress: Number.isFinite(progress) ? Math.max(0, Math.min(def.maxProgress, progress)) : 0,
+      unlocked: old.unlocked === true,
+    };
+  });
 }
 
 /**
@@ -143,8 +149,7 @@ function loadSave(): SaveState | null {
           ? parsed.unlockedSections
           : ['s1'],
       trades: Array.isArray(parsed.trades) ? parsed.trades : initialTradeDecisions,
-      badges:
-        Array.isArray(parsed.badges) && parsed.badges.length > 0 ? parsed.badges : badgesData,
+      badges: normalizeBadges(parsed.badges),
       daily: normalizeDaily(parsed.daily),
       missed:
         parsed.missed && typeof parsed.missed === 'object'
@@ -199,7 +204,6 @@ export default function App() {
   const [daily, setDaily] = useState<DailyState>(saved?.daily ?? initialDaily);
   /** 錯題紀錄：questionKey（lessonId#題號）→ 答錯次數 */
   const [missed, setMissed] = useState<Record<string, number>>(saved?.missed ?? {});
-  const [students, setStudents] = useState<LeaderboardStudent[]>(leaderboardStudents);
 
   const [currentTab, setCurrentTab] = useState<AppTab>('learn');
   const [activeSection, setActiveSection] = useState<Section | null>(null);
@@ -214,11 +218,8 @@ export default function App() {
   /** 設定彈窗（含重置進度） */
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const [isWeeklyDrawerOpen, setIsWeeklyDrawerOpen] = useState(false);
   /** 地圖上目前關卡離開視線時，顯示「繼續闖關」懸浮按鈕 */
   const [showContinue, setShowContinue] = useState(false);
-  /** AI 對話導師：目前帶入的錯題情境（null = 關閉） */
-  const [tutorContext, setTutorContext] = useState<TutorContext | null>(null);
 
   // Persist
   useEffect(() => {
@@ -338,7 +339,7 @@ export default function App() {
     }));
   };
 
-  /** 重置學習進度：清除此瀏覽器存檔（含模擬投組、儀表板、時事挑戰、AI 導師），回到起跑前測驗 */
+  /** 重置學習進度：清除此瀏覽器存檔（含模擬投組、儀表板與已移除功能的舊存檔），回到起跑前測驗 */
   const handleResetProgress = () => {
     try {
       localStorage.removeItem(LS_KEY);
@@ -357,7 +358,6 @@ export default function App() {
     setDaily({ ...initialDaily, tasks: initialDaily.tasks.map((t) => ({ ...t })) });
     setMissed({});
     setIsReviewOpen(false);
-    setStudents(leaderboardStudents);
     setCurrentTab('learn');
     setActiveSection(null);
     setActiveLesson(null);
@@ -432,11 +432,6 @@ export default function App() {
       }));
     }
 
-    // Leaderboard sync
-    setStudents((prev) =>
-      prev.map((s) => (s.isCurrentUser ? { ...s, weeklyXp: s.weeklyXp + rewardXp } : s))
-    );
-
     // 勳章進度：
     // badge-5 百發百中學者＝連續滿分（3 星）通關，失手一次歸零
     // badge-6 心魔獵人＝通過 S6 BOSS
@@ -492,7 +487,7 @@ export default function App() {
     });
   };
 
-  /** 統一的 XP 給與（含升級判定與排行榜同步） */
+  /** 統一的 XP 給與（含升級判定） */
   const grantXp = (xp: number) => {
     if (xp <= 0) return;
     setStats((prev) => {
@@ -518,23 +513,11 @@ export default function App() {
         title: newTitle,
       };
     });
-    setStudents((prev) =>
-      prev.map((s) => (s.isCurrentUser ? { ...s, weeklyXp: s.weeklyXp + xp } : s))
-    );
   };
 
   /** 複習一輪結束：發放小額 XP（每題 5 XP） */
   const handleReviewComplete = (correct: number, _total: number) => {
     grantXp(correct * 5);
-  };
-
-  /** 每週時事挑戰結算：XP 與寶石由 App 端入帳（元件本身不動 stats） */
-  const handleWeeklyNewsReward = (xp: number, gems: number) => {
-    if (xp > 0) grantXp(xp);
-    if (gems > 0) {
-      sound.playCoin();
-      setStats((prev) => ({ ...prev, gems: prev.gems + gems }));
-    }
   };
 
   /** 模擬投組完成一筆下單：串進遊戲經濟（XP＋每日任務「模擬下單」） */
@@ -652,7 +635,6 @@ export default function App() {
         onToggleSound={handleToggleSound}
         onOpenHeartRefill={() => setIsHeartRefillOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenWeeklyDrawer={() => setIsWeeklyDrawerOpen(true)}
       />
 
       <main className="flex-1 w-full max-w-xl mx-auto flex flex-col">
@@ -662,7 +644,6 @@ export default function App() {
             {(
               [
                 ['learn', '學習地圖', MapPin, 'text-[#58CC02]'],
-                ['leaderboard', '社群聯賽', Trophy, 'text-amber-500'],
                 ['journal', '決策日記', BookMarked, 'text-emerald-600'],
                 ['paper', '模擬投組', CandlestickChart, 'text-sky-500'],
                 ['badges', '成就勳章', Award, 'text-amber-500'],
@@ -703,12 +684,6 @@ export default function App() {
               onJumpToSection={setJumpTarget}
             />
           </div>
-        )}
-
-        {currentTab === 'leaderboard' && (
-          <Suspense fallback={<ScreenFallback label="載入排行榜…" />}>
-            <Leaderboard students={students} />
-          </Suspense>
         )}
 
         {currentTab === 'journal' && (
@@ -801,7 +776,6 @@ export default function App() {
           {(
             [
               ['learn', '學習地圖', MapPin],
-              ['leaderboard', '社群聯賽', Trophy],
               ['journal', '決策日記', BookMarked],
               ['paper', '模擬投組', CandlestickChart],
               ['badges', '成就勳章', Award],
@@ -861,19 +835,9 @@ export default function App() {
                 ),
               }));
             }}
-            onAskTutor={setTutorContext}
           />
         </Suspense>
       )}
-
-      {/* AI 對話導師：由課程答錯畫面帶入題目情境 */}
-      <Suspense fallback={null}>
-        <AITutor
-          isOpen={tutorContext !== null}
-          context={tutorContext}
-          onClose={() => setTutorContext(null)}
-        />
-      </Suspense>
 
       <SkipGradeModal
         targetSection={jumpTarget}
@@ -931,20 +895,6 @@ export default function App() {
         onClose={() => setIsWisdomModalOpen(false)}
         onClaimHeart={handleClaimWisdomHeart}
       />
-
-      {/* 右側抽屜：每週時事挑戰（頂部 Header「時事挑戰」鈕開啟） */}
-      <SideDrawer
-        isOpen={isWeeklyDrawerOpen}
-        onClose={() => setIsWeeklyDrawerOpen(false)}
-        title="每週時事挑戰"
-      >
-        <Suspense fallback={null}>
-          <WeeklyNewsChallenge
-            risk={profile?.risk ?? null}
-            onReward={handleWeeklyNewsReward}
-          />
-        </Suspense>
-      </SideDrawer>
     </div>
   );
 }

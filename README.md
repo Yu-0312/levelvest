@@ -11,10 +11,10 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-7.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-38BDF8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![CI](https://github.com/Yu-0312/levelvest-plus/actions/workflows/ci.yml/badge.svg)](https://github.com/Yu-0312/levelvest-plus/actions/workflows/ci.yml)
+[![CI](https://github.com/Yu-0312/levelvest/actions/workflows/ci.yml/badge.svg)](https://github.com/Yu-0312/levelvest/actions/workflows/ci.yml)
 [![Built with Google AI Studio](https://img.shields.io/badge/Built_in-Google_AI_Studio-8E75B2?logo=googleaistudio&logoColor=white)](https://ai.studio/apps/7783595c-84c6-4d57-ab9c-b10325139f56)
 
-[🕹️ 線上試玩](https://yu-0312.github.io/levelvest-plus/) · [🌐 線上課程藍圖](https://yu-0312.github.io/levelvest-plus/curriculum-blueprint.html) · [⏩🪄 跳關 & 跳級](#skip) · [🧪 本地執行](#local-run)
+[🕹️ 線上試玩](https://yu-0312.github.io/levelvest/) · [🌐 線上課程藍圖](https://yu-0312.github.io/levelvest/curriculum-blueprint.html) · [⏩🪄 跳關 & 跳級](#skip) · [🧪 本地執行](#local-run)
 
 </div>
 
@@ -22,10 +22,10 @@
 
 ## 📸 玩起來像這樣
 
-| 🗺️ 學習地圖 | 📖 關卡測驗 | 🏆 社群聯賽 |
+| 🗺️ 學習地圖 | 📖 關卡測驗 | 📓 決策日記 |
 | :---: | :---: | :---: |
-| <img src="docs/shot-map.png" width="252" /> | <img src="docs/shot-lesson-quiz.png" width="252" /> | <img src="docs/shot-leaderboard.png" width="252" /> |
-| Duolingo 式技能樹，過 BOSS 解鎖下一章 | 概念筆記 → 選擇題 → 星星結算 | 週 XP、紀律勝率、連勝天數 |
+| <img src="docs/shot-map.png" width="252" /> | <img src="docs/shot-lesson-quiz.png" width="252" /> | <img src="docs/shot-journal.png" width="252" /> |
+| Duolingo 式技能樹，過 BOSS 解鎖下一章 | 概念筆記 → 選擇題 → 星星結算 | 記錄操作理由、情緒與紀律 |
 
 <br />
 
@@ -40,12 +40,9 @@ LevelVest 是一款專為 **Gen Z 與投資新手**打造的遊戲化學習 App�
 | 🪄 | **跳級** | 點章節卡片上的「跳級」按鈕，直接解鎖目標章節（含中間章節），進度保留、隨時回頭 |
 | ❤️ | **愛心 / 寶石 / 等級** | 答錯扣愛心、過關賺 XP 與寶石，用寶石補血或讀蒙格心法免費 +1 心 |
 | 📓 | **投資決策日記** | 記錄模擬操作（買進試單 / 逢高獲利 / 嚴格停損 / 空手觀望）＋情緒標記與紀律評分 |
-| 🏅 | **行為金融徽章** | 「逆風冷靜者」「心魔獵人」等 8 枚徽章，鼓勵戰勝人性弱點 |
-| 🏆 | **班級排行榜** | 週 XP、決策勝率、學習連勝，前 3 名晉級「鑽石聯賽」；名次依實際 XP 動態計算 |
-| 📰 | **每週時事挑戰** | Gemini 依你的風險偏好出 3–5 題新聞情境題（同週不重出）；無 API 金鑰自動降級內建示範題組 |
-| 🤖 | **AI 對話導師** | 答錯後可多輪追問「為什麼」，Gemini 帶著題目與章節上下文耐心講解（≤150 字、不下單建議） |
+| 🏅 | **行為金融徽章** | 「鋼鐵紀律者」「心魔獵人」等 5 枚徽章，鼓勵戰勝人性弱點 |
 | 📈 | **模擬投組** | 100 萬虛擬資金、決定論式模擬行情、停損警示；下單前必填投資理由與情緒標記（紀律訓練） |
-| 📊 | **學習儀表板** | 完成率、星等分布、弱點 TOP5、連勝曲線，另有給機構看的「營運視角」漏斗示意 |
+| 📊 | **學習儀表板** | 完成率、星等分布、弱點 TOP5、每日任務近 7 天達成率 |
 | 🎓 | **學習證明分享卡** | 成就頁一鍵產生 1200×630 分享圖（稱號／等級／關卡／徽章），可下載 PNG |
 | 🔊 | **音效回饋** | 點擊、成功、失誤、獲得寶石四種音效（Web Audio 合成，可關閉） |
 
@@ -93,7 +90,7 @@ LevelVest 是一款專為 **Gen Z 與投資新手**打造的遊戲化學習 App�
 | 🔬 S9 | **進階研究館** | 怎麼做出自己的研究？（除權息、籌碼、估值） | 13 |
 | 🎓 S10 | **大師試煉** | 我準備好用真錢了嗎？（90 天模擬盤、投資計畫書） | 7 |
 
-📖 完整課程設計藍圖（10 章 / 38 單元 / 10 種題型 / 遊戲機制對照）→ [線上閱讀](https://yu-0312.github.io/levelvest-plus/curriculum-blueprint.html) · [原始檔](public/curriculum-blueprint.html)
+📖 完整課程設計藍圖（10 章 / 38 單元 / 10 種題型 / 遊戲機制對照）→ [線上閱讀](https://yu-0312.github.io/levelvest/curriculum-blueprint.html) · [原始檔](public/curriculum-blueprint.html)
 
 <br />
 
@@ -126,8 +123,8 @@ flowchart TD
 **需求**：Node.js 18+
 
 ```bash
-git clone https://github.com/Yu-0312/levelvest-plus.git
-cd levelvest-plus
+git clone https://github.com/Yu-0312/levelvest.git
+cd levelvest
 npm install          # 直接安裝即可（依賴已清理，無需 --legacy-peer-deps）
 npm run dev          # 開發伺服器 → http://localhost:3000
 ```
@@ -141,7 +138,7 @@ npm run lint         # TypeScript 型別檢查（tsc --noEmit）
 npm run check        # 型別檢查 + 建置一次跑完（與 CI 相同流程）
 ```
 
-> 💡 學習進度存在瀏覽器 localStorage（`levelvest-save-v1`）。要重新開始時，點右上角**齒輪 ⚙️ →「重置學習進度」**再點一次確認即可（會連同模擬投組、儀表板、時事挑戰、AI 導師的專屬存檔一併清除）；進階做法是在開發者工具執行 `localStorage.clear()` 後重新整理。
+> 💡 學習進度存在瀏覽器 localStorage（`levelvest-save-v1`）。要重新開始時，點右上角**齒輪 ⚙️ →「重置學習進度」**再點一次確認即可（會連同模擬投組、儀表板的專屬存檔一併清除）；進階做法是在開發者工具執行 `localStorage.clear()` 後重新整理。
 > 每日任務以**在地日期**跨日自動歸零；存檔欄位缺漏或版本變更時會以預設值兜底，不會因此白屏。
 
 <br />
@@ -150,7 +147,7 @@ npm run check        # 型別檢查 + 建置一次跑完（與 CI 相同流程�
 
 本專案最初在 [Google AI Studio](https://ai.studio/apps/7783595c-84c6-4d57-ab9c-b10325139f56) 建立。
 
-- **GitHub Pages（本 repo）**：push 到 `main` 後由 GitHub Actions 自動型別檢查 → 建置 → 部署，成品在 [yu-0312.github.io/levelvest-plus](https://yu-0312.github.io/levelvest-plus/)。
+- **GitHub Pages（本 repo）**：push 到 `main` 後由 GitHub Actions 自動型別檢查 → 建置 → 部署，成品在 [yu-0312.github.io/levelvest](https://yu-0312.github.io/levelvest/)。
 - **其他主機**：把 `dist/` 丟到 Vercel / Netlify / Cloudflare Pages，或回 AI Studio 用 Deploy 功能。
 
 <br />
@@ -161,7 +158,7 @@ npm run check        # 型別檢查 + 建置一次跑完（與 CI 相同流程�
 | :--- | :--- |
 | **CI / CD** | 新增 `.github/workflows/ci.yml`：每次 push／PR 自動跑 `tsc --noEmit` + `vite build`；Pages 部署改用 `npm ci`（鎖檔安裝，可重複建置） |
 | **依賴清理** | 移除從未被引用的 `express`、`dotenv`、`esbuild`、`tsx`、`autoprefixer`、`@types/express`，並解決 peer dependency 衝突——`npm install` 不再需要 `--legacy-peer-deps` |
-| **效能** | 起跑測驗、關卡播放器、排行榜、決策日記、設定改為動態 chunk（React.lazy + Suspense），主 chunk 由 518 kB 降至 473 kB（gzip 166 → 155 kB），confetti／動畫模組延後載入 |
+| **效能** | 起跑測驗、關卡播放器、決策日記、設定改為動態 chunk（React.lazy + Suspense），主 chunk 由 518 kB 降至 473 kB（gzip 166 → 155 kB），confetti／動畫模組延後載入 |
 | **穩定度** | 讀檔改為逐欄校正與兜底（舊檔／損毀檔不再白屏）；每日任務跨日自動歸零；補血彈窗、章節解鎖改用 effect 與純更新函式（消除 StrictMode 重複執行的副作用）；一次過關跨多級時改用迴圈結算升級 |
 | **無障礙** | 全域 `:focus-visible` 焦點框、`prefers-reduced-motion` 減少動態、彈窗補上 `role="dialog"`/`aria-modal`、圖示按鈕補 `aria-label`／`aria-pressed`、分頁加 `aria-current` |
 | **分享與安裝** | 補上 favicon、`og:image`／`twitter:card`（1200×630 分享圖）、theme-color 與 `site.webmanifest`（App icon／名稱／主題色） |
@@ -179,14 +176,15 @@ npm run check        # 型別檢查 + 建置一次跑完（與 CI 相同流程�
 | 圖示 | lucide-react |
 | 音效 | Web Audio API（`src/utils/audio.ts`） |
 
-> **目前狀態**：可完整體驗的前端產品。關卡、排行榜、日記資料來自 `src/data/` 的課程資料與 mock 資料；AI 功能（對話導師、時事出題）已實際串接 Gemini API（`@google/genai`），設定 `.env` 的 `VITE_GEMINI_API_KEY` 即可啟用，未設定時自動降級為離線示範模式。
+> **目前狀態**：純前端、可完整離線體驗的基礎版，不需要任何 API 金鑰。課程與初始資料來自 `src/data/`，所有進度只存在瀏覽器 localStorage。
+> 比賽版（含 AI 導師、時事挑戰、社群聯賽、實作題等）在 [levelvest-plus](https://github.com/Yu-0312/levelvest-plus)。
 
 <br />
 
 ## 📁 專案結構
 
 ```
-levelvest-plus/
+levelvest/
 ├── .github/workflows/
 │   ├── ci.yml                  # push / PR：tsc 型別檢查 + vite build
 │   └── deploy-pages.yml        # push main：建置並部署 GitHub Pages
@@ -196,14 +194,13 @@ levelvest-plus/
 │   │   ├── LessonPlayer.tsx     # 關卡播放器（筆記 → 測驗 → 結算）
 │   │   ├── SkipGradeModal.tsx   # 跳級確認彈窗
 │   │   ├── OnboardingSurvey.tsx # 起跑前測驗
-│   │   ├── Leaderboard.tsx      # 社群聯賽
 │   │   ├── TradeJournal.tsx     # 決策日記
 │   │   ├── HeartRefillModal.tsx # 補血彈窗（寶石 / 蒙格心法）
 │   │   └── …                    # Header、Mascot、DailyTasks、WisdomModal
 │   ├── data/
 │   │   ├── curriculumPart1.ts   # S1–S5 課程資料
 │   │   ├── curriculumPart2.ts   # S6–S10 課程資料
-│   │   └── mockData.ts          # 排行榜 / 徽章 / 任務初始資料
+│   │   └── mockData.ts          # 初始數值 / 徽章 / 任務資料
 │   ├── utils/audio.ts           # Web Audio 音效合成
 │   ├── types.ts                 # TypeScript 型別定義
 │   ├── App.tsx                  # 主應用（4 個分頁 + 存檔／跳關／跳級邏輯）
@@ -226,16 +223,22 @@ levelvest-plus/
 - [x] 跳級（直接解鎖目標章節）
 - [x] 愛心歸零 → 錯題複習回血（答對 1 題恢復 1 顆心，錯題優先出題；複習答對錯題數會遞減）
 - [x] CI（型別檢查＋建置）、依賴清理、code splitting、無障礙與分享 meta（見「工程實踐」）
-- [x] 接上 Gemini API：AI 對話導師（答錯多輪追問）＋ 每週時事挑戰出題（含離線示範 fallback）
 - [x] 模擬投組（paper trading）：虛擬資金、停損警示、下單紀律訓練，與每日任務／XP 連動
-- [x] 學習成效儀表板：完成率、弱點分析、連勝曲線＋機構營運視角
+- [x] 學習成效儀表板：完成率、星等、弱點分析、每日任務達成率
 - [x] 學習證明分享卡（canvas 1200×630 PNG）
-- [ ] AI 學習日報：每日個人化學習摘要與複習建議（[原 repo #4](https://github.com/Yu-0312/levelvest/issues/4)）
-- [ ] AI 新聞分享：投資新聞摘要、觀念連結與社群分享（[原 repo #5](https://github.com/Yu-0312/levelvest/issues/5)）
-- [ ] AI 新聞即時模擬交易練習：讀新聞 → 下單 → AI 複盤（[原 repo #6](https://github.com/Yu-0312/levelvest/issues/6)）
-- [ ] 真實排行榜後端（目前為班級 mock 資料）
-- [ ] 錯題本整合：時事挑戰錯題併入統一錯題複習池
+- [ ] AI 學習日報：每日個人化學習摘要與複習建議（[#4](https://github.com/Yu-0312/levelvest/issues/4)）
+- [ ] AI 新聞分享：投資新聞摘要、觀念連結與社群分享（[#5](https://github.com/Yu-0312/levelvest/issues/5)）
+- [ ] AI 新聞即時模擬交易練習：讀新聞 → 下單 → AI 複盤（[#6](https://github.com/Yu-0312/levelvest/issues/6)）
 - [ ] PWA 離線學習
+
+### 🧹 已從基礎版移除、待重新設計
+
+以下功能在基礎版還沒設計完整，已先移除（比賽版 levelvest-plus 仍保留），重新設計的討論都開在 Issues：
+
+- 社群聯賽／排行榜：需要真實後端與帳號，不能用寫死的假同學
+- 學習儀表板「機構營運視角」：示意數據，需等真實埋點
+- 行為徽章「逆風冷靜者」「趨勢信徒」「LevelVest 大師」、連勝凍結／保護罩、日記「決策勝率」：缺少觸發條件或輸入介面
+- AI 對話導師、每週時事挑戰：金鑰不能放在前端，需要後端代理
 
 <br />
 

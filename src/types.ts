@@ -1,18 +1,4 @@
-export type TabType = 'learn' | 'leaderboard' | 'journal' | 'badges';
-
-export interface LeaderboardStudent {
-  id: string;
-  rank: number;
-  name: string;
-  school: string;
-  avatar: string;
-  weeklyXp: number;
-  decisionWinRate: number;
-  streak: number;
-  isCurrentUser?: boolean;
-  cheerCount: number;
-  badgeTitle: string;
-}
+export type TabType = 'learn' | 'journal' | 'badges';
 
 export interface UserStats {
   streak: number;
@@ -121,7 +107,6 @@ export interface TradeDecision {
   rationale: string;
   disciplineFollowed: boolean;
   strategyTag: string;
-  outcome: '符合預期' | '正常回檔' | '觸發停損' | '待觀察';
   emotions: '冷靜理性' | '略有猶豫' | '克服FOMO';
   gainOrDisciplineScore: string;
 }
@@ -147,5 +132,4 @@ export interface DailyTask {
 export interface DailyState {
   date: string;
   tasks: DailyTask[];
-  freezeDays: number;
 }

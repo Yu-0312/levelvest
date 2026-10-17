@@ -183,82 +183,6 @@ function EmptyState({ text }: { text: string }) {
 }
 
 /* ════════════════════════════════════════════════════════════
-   「給永豐的營運視角」：以下皆為示意數據（機構 demo 用）
-   ════════════════════════════════════════════════════════════ */
-
-/** 學習 → 開戶轉換漏斗（示意） */
-const FUNNEL = [
-  { label: '開啟 App／曝光', pct: 100 },
-  { label: '完成起跑測驗', pct: 74 },
-  { label: '開始第一堂課', pct: 61 },
-  { label: '完成首章（達 BOSS）', pct: 38 },
-  { label: '點擊模擬開戶 CTA', pct: 12 },
-];
-
-/** 留存曲線（示意，D0–D14） */
-const RETENTION = [
-  { d: 'D0', v: 100 },
-  { d: 'D1', v: 63 },
-  { d: 'D3', v: 49 },
-  { d: 'D7', v: 42 },
-  { d: 'D14', v: 36 },
-];
-
-const EVENTS = [
-  'onboarding_complete：完成起跑測驗（含程度、風險屬性分層）',
-  'lesson_start／lesson_complete：關卡開始、完成與星星數（學習成效主指標）',
-  'question_miss：題目 key 與答錯次數（弱點雷達、題庫調參）',
-  'daily_task_done：每日任務三項達成與連續天數（留存代理指標）',
-  'section_unlock：章節解鎖節奏（課程漏斗各層來源）',
-  'journal_entry：決策日記新增與多空立場（行為金融參與度）',
-  'badge_unlock：徽章解鎖（遊戲化激勵成效）',
-  'open_account_cta_click：模擬開戶 CTA 點擊（轉換漏斗末端）',
-];
-
-function RetentionChart() {
-  const w = 300;
-  const h = 132;
-  const padX = 22;
-  const padY = 14;
-  const pts = RETENTION.map((p, i) => {
-    const x = padX + (i * (w - padX * 2)) / (RETENTION.length - 1);
-    const y = padY + (1 - p.v / 100) * (h - padY * 2 - 16);
-    return { ...p, x, y };
-  });
-  const poly = pts.map((p) => `${p.x},${p.y}`).join(' ');
-  const area = `${padX},${h - padY} ${poly} ${w - padX},${h - padY}`;
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" role="img" aria-label="示意留存曲線">
-      {[0, 0.5, 1].map((t) => (
-        <line
-          key={t}
-          x1={padX}
-          x2={w - padX}
-          y1={padY + t * (h - padY * 2 - 16)}
-          y2={padY + t * (h - padY * 2 - 16)}
-          stroke="#E2E8F0"
-          strokeDasharray="3 4"
-          strokeWidth="1"
-        />
-      ))}
-      <polygon points={area} fill="#38BDF8" opacity="0.12" />
-      <polyline points={poly} fill="none" stroke="#0EA5E9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      {pts.map((p) => (
-        <g key={p.d}>
-          <circle cx={p.x} cy={p.y} r="4" fill="#fff" stroke="#0EA5E9" strokeWidth="2.5" />
-          <text x={p.x} y={h - 2} textAnchor="middle" fontSize="9" fontWeight="700" fill="#94A3B8">
-            {p.d}
-          </text>
-          <text x={p.x} y={p.y - 8} textAnchor="middle" fontSize="9" fontWeight="900" fill="#0284C7">
-            {p.v}%
-          </text>
-        </g>
-      ))}
-    </svg>
-  );
-}
-
-/* ════════════════════════════════════════════════════════════
    主元件
    ════════════════════════════════════════════════════════════ */
 
@@ -694,7 +618,7 @@ export const LearningDashboard: React.FC = () => {
             </p>
             <p className="text-xl font-black text-slate-800 leading-tight">
               {badgesUnlocked}
-              <span className="text-sm text-slate-400"> / {badges.length || 8}</span>
+              <span className="text-sm text-slate-400"> / {badges.length}</span>
             </p>
           </div>
         </div>
@@ -740,71 +664,6 @@ export const LearningDashboard: React.FC = () => {
           </div>
         )}
       </Card>
-
-      {/* ── 給永豐的營運視角（示意數據） ── */}
-      <section className="rounded-3xl border-2 border-sky-200 bg-gradient-to-b from-sky-50 to-white p-4 sm:p-5 shadow-sm">
-        <header className="flex items-start gap-2 mb-1">
-          <span className="w-8 h-8 rounded-xl bg-sky-100 flex items-center justify-center text-sky-600 shrink-0">
-            <BarChart3 className="w-4 h-4" />
-          </span>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-black text-sm text-slate-800 leading-tight">給永豐的營運視角</h3>
-            <p className="text-[10px] font-bold text-slate-400 leading-tight">
-              機構 demo 用 · 產品化後可由埋點產出的營運儀表板
-            </p>
-          </div>
-          <span className="shrink-0 text-[9px] font-black px-2 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
-            示意數據
-          </span>
-        </header>
-        <p className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 rounded-xl px-2.5 py-1.5 mt-2 leading-relaxed">
-          ⚠ 以下漏斗與留存數字皆為產品示意（非真實營運成果），實際需以上線後埋點回報為準。
-        </p>
-
-        {/* 轉換漏斗 */}
-        <h4 className="font-black text-xs text-slate-700 mt-4 mb-2">學習 → 開戶轉換漏斗（示意）</h4>
-        <ul className="space-y-2">
-          {FUNNEL.map((f, i) => (
-            <li key={f.label} className="flex items-center gap-2">
-              <span className="text-[10px] font-bold text-slate-500 w-28 shrink-0 text-right">{f.label}</span>
-              <div className="flex-1 h-5 rounded-lg bg-slate-100 overflow-hidden">
-                <div
-                  className={`h-full rounded-lg bg-gradient-to-r ${
-                    i === FUNNEL.length - 1 ? 'from-emerald-400 to-emerald-500' : 'from-sky-400 to-sky-500'
-                  }`}
-                  style={{ width: `${f.pct}%` }}
-                />
-              </div>
-              <span className={`text-[10px] font-black shrink-0 w-8 ${i === FUNNEL.length - 1 ? 'text-emerald-600' : 'text-sky-600'}`}>
-                {f.pct}%
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        {/* 留存曲線 */}
-        <h4 className="font-black text-xs text-slate-700 mt-4 mb-1">留存曲線（示意 · D0–D14）</h4>
-        <div className="rounded-2xl bg-white border border-sky-100 p-2">
-          <RetentionChart />
-        </div>
-
-        {/* 建議埋點 */}
-        <h4 className="font-black text-xs text-slate-700 mt-4 mb-2">建議埋點清單</h4>
-        <ul className="space-y-1.5">
-          {EVENTS.map((e) => {
-            const [name, desc] = e.split('：');
-            return (
-              <li key={name} className="flex items-start gap-2 text-[11px] leading-relaxed">
-                <span className="mt-1 w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0" />
-                <span>
-                  <code className="font-black text-sky-600 bg-sky-50 rounded px-1 py-0.5 text-[10px]">{name}</code>
-                  <span className="font-bold text-slate-600 ml-1">：{desc}</span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
 
       <p className="text-center text-[10px] font-bold text-slate-400 pb-2">
         LevelVest 學習成效儀表板 · 資料僅存於本機瀏覽器

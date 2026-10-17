@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Flame, Gem, Heart, Volume2, VolumeX, ShieldCheck, Settings, TrendingUp, Newspaper } from 'lucide-react';
+import { Flame, Gem, Heart, Volume2, VolumeX, Settings, TrendingUp } from 'lucide-react';
 import { UserStats } from '../types';
 import { sound } from '../utils/audio';
 
@@ -8,8 +8,6 @@ interface HeaderProps {
   onToggleSound: () => void;
   onOpenHeartRefill: () => void;
   onOpenSettings: () => void;
-  /** 打開右側「每週時事挑戰」抽屜 */
-  onOpenWeeklyDrawer: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -17,7 +15,6 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSound,
   onOpenHeartRefill,
   onOpenSettings,
-  onOpenWeeklyDrawer,
 }) => {
   const [showStreakModal, setShowStreakModal] = useState(false);
 
@@ -110,21 +107,6 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
 
-            {/* 每週時事挑戰抽屜入口（固定顯示，不藏進選單） */}
-            <button
-              id="weekly-drawer-btn"
-              onClick={() => {
-                sound.playClick();
-                onOpenWeeklyDrawer();
-              }}
-              aria-label="打開每週時事挑戰側邊欄"
-              className="flex items-center gap-1 px-2 py-1.5 rounded-xl border-2 border-sky-300 bg-sky-50 text-sky-700 hover:bg-sky-100 active:translate-y-0.5 transition text-xs sm:text-sm font-extrabold cursor-pointer"
-              title="每週時事挑戰"
-            >
-              <Newspaper className="w-4 h-4 text-sky-500" />
-              <span className="hidden xs:inline sm:inline">時事挑戰</span>
-            </button>
-
             {/* Sound Toggle */}
             <button
               id="sound-toggle-btn"
@@ -197,17 +179,9 @@ export const Header: React.FC<HeaderProps> = ({
             <h3 className="text-xl font-black text-slate-800 mb-1">
               🔥 連續學習 {stats.streak} 天！
             </h3>
-            <p className="text-sm text-slate-600 mb-4 leading-relaxed">
-              太棒了！持續累積投資敏銳度。每天完成任一微課程挑戰，就能保持連勝火苗！
+            <p className="text-sm text-slate-600 mb-5 leading-relaxed">
+              每天把「今日任務」全部完成，就算一個紀律日。連續天數中斷會重新起算，明天記得回來！
             </p>
-
-            <div className="bg-amber-50 rounded-2xl p-3 border border-amber-200 flex items-center gap-3 text-left mb-5">
-              <ShieldCheck className="w-6 h-6 text-amber-600 shrink-0" />
-              <div>
-                <p className="text-xs font-bold text-amber-900">連勝保護罩已啟用</p>
-                <p className="text-[11px] text-amber-700">即使忙碌一天漏卡，火苗也不會熄滅。</p>
-              </div>
-            </div>
 
             <button
               onClick={() => {

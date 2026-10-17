@@ -5,7 +5,7 @@ interface MascotProps {
   emotion?: 'happy' | 'celebrating' | 'thinking' | 'oops';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  /** false = 靜止（排行榜頭像等小尺寸用） */
+  /** false = 靜止（小尺寸頭像等用） */
   animated?: boolean;
 }
 

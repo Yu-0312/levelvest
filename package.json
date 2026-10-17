@@ -13,7 +13,6 @@
     "check": "tsc --noEmit && vite build"
   },
   "dependencies": {
-    "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/canvas-confetti": "^1.9.0",
     "@vitejs/plugin-react": "^6.1.1",
@@ -31,5 +30,5 @@
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2"
   },
-  "description": "LevelVest \u2014 \u904a\u6232\u5316\u53f0\u80a1\u6295\u8cc7\u5b78\u7fd2 App"
+  "description": "LevelVest — 遊戲化台股投資學習 App"
 }

@@ -44,10 +44,9 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
   const totalDecisions = decisions.length;
   const disciplinedCount = decisions.filter((d) => d.disciplineFollowed).length;
   const disciplineRate = totalDecisions > 0 ? Math.round((disciplinedCount / totalDecisions) * 100) : 0;
-  // 決策勝率＝已回饋（非「待觀察」）的決策中「符合預期」的比例
-  const settled = decisions.filter((d) => d.outcome !== '待觀察');
-  const winCount = settled.filter((d) => d.outcome === '符合預期').length;
-  const decisionWinRate = settled.length > 0 ? Math.round((winCount / settled.length) * 100) : null;
+  // 本月日記筆數（習慣養成指標）
+  const monthKey = localDateKey().slice(0, 7);
+  const thisMonthCount = decisions.filter((d) => d.date.startsWith(monthKey)).length;
   // 鋼鐵紀律勳章（badge-1）實際進度
   const disciplineBadge = badges.find((b) => b.id === 'badge-1');
 
@@ -70,7 +69,6 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
       strategyTag,
       rationale,
       disciplineFollowed,
-      outcome: '待觀察',
       emotions,
       gainOrDisciplineScore: disciplineFollowed ? '+100 紀律分' : '+50 檢討分',
     };
@@ -95,19 +93,19 @@ export const TradeJournal: React.FC<TradeJournalProps> = ({
         </p>
       </div>
 
-      {/* KPI Stats Grid: 決策勝率, 平均抱單天數, 鋼鐵紀律勳章 */}
+      {/* KPI Stats Grid: 日記筆數, 紀律遵守率, 鋼鐵紀律勳章 */}
       <div className="grid grid-cols-3 gap-2.5 sm:gap-4">
-        {/* Metric 1: 決策勝率（真實計算；尚無已結案決策時顯示 —） */}
+        {/* Metric 1: 日記筆數（真實計算） */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border-2 border-slate-200 text-center shadow-xs">
           <div className="w-9 h-9 mx-auto mb-2 bg-emerald-100 rounded-xl flex items-center justify-center">
             <TrendingUp className="w-5 h-5 text-[#58CC02]" />
           </div>
           <p className="text-xl sm:text-2xl font-black text-slate-800">
-            {decisionWinRate === null ? '—' : `${decisionWinRate}%`}
+            {totalDecisions}
           </p>
-          <p className="text-[11px] font-bold text-slate-500 mt-0.5">決策勝率</p>
+          <p className="text-[11px] font-bold text-slate-500 mt-0.5">日記筆數</p>
           <span className="inline-block mt-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-            {settled.length === 0 ? '完成日記後開始追蹤' : `已結案 ${settled.length} 筆決策`}
+            {totalDecisions === 0 ? '寫下第一則開始累積' : `本月 ${thisMonthCount} 筆`}
           </span>
         </div>
 

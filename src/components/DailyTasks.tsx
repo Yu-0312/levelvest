@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Circle, Snowflake, Target } from 'lucide-react';
+import { CheckCircle2, Circle, Target } from 'lucide-react';
 import { DailyState } from '../types';
 import { Mascot } from './Mascot';
 
@@ -20,13 +20,9 @@ export const DailyTasks: React.FC<DailyTasksProps> = ({ daily, userName }) => {
             <p className="font-black text-slate-800 text-sm">
               {userName}，今日任務
             </p>
-            <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-              <Snowflake className="w-3 h-3 text-sky-400" />
-              {daily.freezeDays} 凍結
-            </div>
           </div>
           <p className="text-[11px] text-slate-500 mt-0.5 mb-2.5">
-            三項全清才算「紀律日」
+            {daily.tasks.length} 項全清才算「紀律日」
           </p>
 
           <div className="space-y-1.5">
