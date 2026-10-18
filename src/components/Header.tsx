@@ -30,10 +30,10 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Left: Brand & User Level */}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-b from-[#6edd1c] to-[#58CC02] border-b-4 border-[#3e9302] flex items-center justify-center shadow-sm shrink-0">
+              <div role="img" aria-label="LevelVest" className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-b from-[#6edd1c] to-[#58CC02] border-b-4 border-[#3e9302] flex items-center justify-center shadow-sm shrink-0">
                 <TrendingUp className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-white" strokeWidth={3} />
               </div>
-              <span className="text-xl sm:text-2xl font-black tracking-tight text-[#58CC02] flex items-center select-none">
+              <span className="hidden sm:flex text-xl sm:text-2xl font-black tracking-tight text-[#58CC02] items-center select-none">
                 Level<span className="text-slate-800">Vest</span>
               </span>
             </div>
