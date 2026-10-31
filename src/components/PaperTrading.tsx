@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { sound } from '../utils/audio';
 import { localDateKey } from '../utils/date';
+import { fnv1a, mulberry32 } from '../utils/random';
+import { buyCost, sellProceeds } from '../utils/tradeCosts';
 
 /* ────────────────────────────────────────────────────────────
    模擬投組（Paper Trading）
@@ -54,25 +56,6 @@ function getDef(code: string): SymbolDef {
 }
 
 /* ── 決定論式亂數：FNV-1a hash + mulberry32 ── */
-
-function fnv1a(str: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
-}
-
-function mulberry32(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
@@ -142,6 +125,10 @@ interface TradeRecord {
   shares: number;
   price: number;
   amount: number;
+  /** 手續費（舊紀錄沒有此欄位） */
+  fee?: number;
+  /** 證交稅，只有賣出才有 */
+  tax?: number;
   reason: string;
   emotion: Emotion | '';
 }
@@ -401,6 +388,8 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
   const orderShares = sharesFromInput();
   const orderPrice = prices[orderCode] ?? 0;
   const orderAmount = orderShares * orderPrice;
+  const orderBuy = buyCost(orderAmount);
+  const orderSell = sellProceeds(orderAmount, orderCode);
 
   /* ── 推進一天：所有標的價格前進一格，並檢查停損 ── */
   const handleAdvance = () => {
@@ -457,8 +446,8 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
         sound.playError();
         return;
       }
-      if (amount > state.cash) {
-        setFormError(`現金不足：本筆需 NT$${money(Math.round(amount))}，帳上僅 NT$${money(Math.round(state.cash))}。`);
+      if (buyCost(amount).total > state.cash) {
+        setFormError(`現金不足：本筆含手續費需 NT$${money(Math.round(buyCost(amount).total))}，帳上僅 NT$${money(Math.round(state.cash))}。`);
         sound.playError();
         return;
       }
@@ -476,6 +465,7 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
       }
     }
 
+    const costs = side === '買進' ? { ...buyCost(amount), tax: 0 } : sellProceeds(amount, orderCode);
     const record: TradeRecord = {
       id: `pt-${Date.now()}-${Math.floor(Math.random() * 1e6)}`,
       day: state.day,
@@ -486,6 +476,8 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
       shares,
       price,
       amount,
+      fee: costs.fee,
+      tax: costs.tax,
       reason: trimmed,
       emotion,
     };
@@ -500,19 +492,21 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
       const existing = positions[orderCode];
       if (side === '買進') {
         const newShares = (existing?.shares ?? 0) + shares;
+        // 平均成本含手續費，損益才會反映真實交易成本
+        const { total } = buyCost(amount);
         const newCost =
-          ((existing?.shares ?? 0) * (existing?.avgCost ?? 0) + amount) / newShares;
+          ((existing?.shares ?? 0) * (existing?.avgCost ?? 0) + total) / newShares;
         positions[orderCode] = {
           shares: newShares,
           avgCost: round2(newCost),
           stopLoss: existing?.stopLoss ?? null,
         };
-        return { ...prev, ...xpPatch, cash: prev.cash - amount, positions, trades: [record, ...prev.trades] };
+        return { ...prev, ...xpPatch, cash: prev.cash - total, positions, trades: [record, ...prev.trades] };
       }
       const remain = (existing?.shares ?? 0) - shares;
       if (remain <= 0) delete positions[orderCode];
       else positions[orderCode] = { ...existing!, shares: remain };
-      return { ...prev, ...xpPatch, cash: prev.cash + amount, positions, trades: [record, ...prev.trades] };
+      return { ...prev, ...xpPatch, cash: prev.cash + sellProceeds(amount, orderCode).net, positions, trades: [record, ...prev.trades] };
     });
 
     // 清空表單（保留標的與方向，方便連續操作）
@@ -846,6 +840,23 @@ export const PaperTrading: React.FC<PaperTradingProps> = ({ onTrade }) => {
           </span>
           <span className="text-slate-800 font-black">小計 NT${money(Math.round(orderAmount))}</span>
         </div>
+        {orderAmount > 0 && (
+          <div className="mt-1 px-3 text-[11px] font-bold text-slate-500 flex justify-between tabular-nums">
+            {side === '買進' ? (
+              <>
+                <span>手續費 0.1425%（最低 20 元）NT${money(orderBuy.fee)}</span>
+                <span className="text-slate-700">實付 NT${money(Math.round(orderBuy.total))}</span>
+              </>
+            ) : (
+              <>
+                <span>
+                  手續費 NT${money(orderSell.fee)} ＋ 證交稅 NT${money(orderSell.tax)}
+                </span>
+                <span className="text-slate-700">實收 NT${money(Math.round(orderSell.net))}</span>
+              </>
+            )}
+          </div>
+        )}
 
         {side === '賣出' && (
           <p className="mt-2 text-[11px] font-bold text-slate-500">

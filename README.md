@@ -18,6 +18,9 @@
 
 </div>
 
+> [!NOTE]
+> 延伸版本 **[LevelVest Plus](https://github.com/Yu-0312/levelvest-plus)** 另外加入 AI 對話導師、每週時事挑戰與排行榜。兩個 repo 共用模擬交易、存檔與課程程式，修 bug 時請同步檢查兩邊。
+
 <br />
 
 ## 📸 玩起來像這樣

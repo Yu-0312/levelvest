@@ -244,6 +244,38 @@ export default function App() {
   /** 地圖上目前關卡離開視線時，顯示「繼續闖關」懸浮按鈕 */
   const [showContinue, setShowContinue] = useState(false);
 
+  // 分頁開著跨過午夜時，每日任務與連勝不會自動重算（原本只在載入時正規化）。
+  // 回到分頁、視窗取得焦點、或午夜計時器觸發時都重新正規化一次；狀態沒變就回傳原物件，不會多餘重繪。
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const rollover = () => {
+      setDaily((prev) => (prev.date === today() ? prev : normalizeDaily(prev)));
+      setStats((prev) => {
+        const next = normalizeStreak(prev);
+        return next.streak === prev.streak ? prev : next;
+      });
+    };
+    const scheduleMidnight = () => {
+      const now = new Date();
+      const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 1);
+      timer = setTimeout(() => {
+        rollover();
+        scheduleMidnight();
+      }, next.getTime() - now.getTime());
+    };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') rollover();
+    };
+    scheduleMidnight();
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', rollover);
+    return () => {
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', rollover);
+    };
+  }, []);
+
   // Persist
   useEffect(() => {
     persist({
